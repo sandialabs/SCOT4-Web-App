@@ -88,8 +88,13 @@ export const mutations: MutationTree<UserState> = {
         state.userApiKeys.splice(keyIndex, 1)
     },
 
-    userSearchSuccess(state, payload:any){
-        state.searchResults = payload.data
+    userSearchSuccess(state, payload: any) {
+        if (!state.searchResults) {
+            state.searchResults = payload.data
+        }
+        else {
+            state.searchResults.splice(0, state.searchResults.length, ...payload.data)
+        }
     },
 
     clearSearchResults(state){

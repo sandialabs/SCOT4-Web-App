@@ -9,7 +9,9 @@ export interface UserState {
     showQuickSettings: boolean;
     firehose: EventSource | undefined;
     firehoseReconnectTask: number | undefined,
-    searchResults: any,
+    firehoseRequestsInProgress: Array<any>,
+    searchResults: Array<any> | undefined,
+    searchText: string,
     showSearchOverlay: boolean,
     notificationsRemaining: number
 }

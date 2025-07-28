@@ -63,10 +63,10 @@ export const getters: GetterTree<IRElementsListState, RootState> = {
             return "entries"
         }
         else if (state.ElementType == IRElementType.VulnFeed) {
-            return "vuln feeds"
+            return "vuln_feeds"
         }
         else if (state.ElementType == IRElementType.VulnTrack) {
-            return "vuln tracks"
+            return "vuln_tracks"
         }
         else{
             return state.ElementType + "s"
@@ -662,7 +662,8 @@ export const getters: GetterTree<IRElementsListState, RootState> = {
                     { 'text': "ID", 'value': "id", "align": "center", "width": idColumnWidth },
                     { 'text': "Entity Name", 'value': "value", "align": "center" },
                     { 'text': "Entity Type", 'value': "type_name", "align": "center", "width": "15em" },
-                    { 'text': "Occurences", 'value': "entity_count", "align": "center", "width": "9em", "sortable": false },
+                    { 'text': "Entity Classes", 'value': "classes", "align": "center", "width": "15em" },
+                    { 'text': "Occurrences", 'value': "entity_count", "align": "center", "width": "9em", "sortable": false },
                     { 'text': "Status", 'value': "status", "align": "center", "width": statusColumnWidth },
                     { 'text': "Created", 'value': "created", "align": "center", "width": "1%" },
                     { 'text': "Sources", 'value': "sources", "align": "center", "width": sourceTagColumnWidth, "sortable": false },

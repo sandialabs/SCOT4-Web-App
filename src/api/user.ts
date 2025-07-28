@@ -219,12 +219,12 @@ export default (axios: AxiosStatic) => ({
         })
     },
 
-    async callTextSearch(searchText:string,  abortController?: AbortController): Promise<any> {
+    async callTextSearch(searchText: string, extraFilter: any = {}, sort: string | undefined = undefined): Promise<any> {
         return axios({
             url: '/search/',
             method: 'POST',
             withCredentials: true,
-            data: {'text': searchText},
+            data: { 'text': searchText, 'sort': sort, ...extraFilter },
             headers: {
                 'Content-Type': 'application/json'
             },

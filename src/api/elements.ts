@@ -121,6 +121,19 @@ export default (axios: AxiosStatic) => ({
         
     })
     },
+    async requestEntityReEnrichmentbyID(elementID: number): Promise<any> {
+        const path = IRElementAPIPaths[IRElementType.Entity]
+        let fullPath:string = ""
+        fullPath = path + '/' + elementID + '/' + 'enrich_request'
+        return axios({
+        url: fullPath,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        withCredentials: true
+    })
+    },
     async createElement(elementType: IRElementType, createData: any, extraData: any): Promise<any> {
         let postData = {}
         const elementName = convertToSnakeCase(elementType)
@@ -148,7 +161,7 @@ export default (axios: AxiosStatic) => ({
             method: 'POST',
             headers: {
                 'Content-Type': 'multipart/form-data',
-                'target_type': targetType,
+                'target_type': convertToSnakeCase(targetType),
                 'target_id': targetId,
                 'description': description
             },
@@ -522,18 +535,51 @@ export default (axios: AxiosStatic) => ({
         })
     },
 
-    async retrieveTags(filterDict: any): Promise<any> {
+    async retrieveTags(filterDict: object): Promise<any> {
         return axios({
-        url: "/tag/",
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        params: filterDict,
-        withCredentials:true
-    })
+            url: "/tag/",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: filterDict,
+            withCredentials:true
+        })
     },
 
+    async deleteTag(id: number): Promise<any> {
+        return axios({
+            url: `/tag/${id}`,
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true
+        })
+    },
+
+    async replaceTag(id: number, replaceId: number): Promise<any> {
+        return axios({
+            url: `/tag/${id}/replace/${replaceId}`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true
+        })
+    },
+
+    async tagAppearances(filterDict: any): Promise<any> {
+        return axios({
+            url: `/tag/target_appearance`,
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: filterDict,
+            withCredentials:true
+        })
+    },
 
     async retrieveAllEntityClasses(): Promise<any> {
         const filterDict = { limit: -1 }
@@ -551,27 +597,63 @@ export default (axios: AxiosStatic) => ({
     async retrieveAllEntityTypes(): Promise<any> {
         const filterDict = { limit: -1 }
         return axios({
-        url: "/entity_type/",
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        params: filterDict,
-        withCredentials:true
-    })
+            url: "/entity_type/",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: filterDict,
+            withCredentials:true
+        })
     },
 
     async retrieveSources(filterDict: any): Promise<any> {
         return axios({
-        url: "/source/",
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        params: filterDict,
-        withCredentials:true
-    })
+            url: "/source/",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: filterDict,
+            withCredentials:true
+        })
     },
+
+    async deleteSource(id: number): Promise<any> {
+        return axios({
+            url: `/source/${id}`,
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true
+        })
+    },
+
+    async replaceSource(id: number, replaceId: number): Promise<any> {
+        return axios({
+            url: `/source/${id}/replace/${replaceId}`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true
+        })
+    },
+
+    async sourceAppearances(filterDict: any): Promise<any> {
+        return axios({
+            url: `/source/target_appearance`,
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: filterDict,
+            withCredentials:true
+        })
+    },
+
+
     async addSource(sourceToAdd: any): Promise<any> {
         if (sourceToAdd.target_type) {
             sourceToAdd.target_type = convertToSnakeCase(sourceToAdd.target_type)
@@ -626,38 +708,50 @@ export default (axios: AxiosStatic) => ({
 
     async addEntityClass(entityId:number, entityClassesToAdd:any): Promise<any> {
         return axios({
-        url: `/entity/${entityId}/entity_class`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: {'entity_class_ids': entityClassesToAdd}
-    })
+            url: `/entity/${entityId}/entity_class`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: {'entity_class_ids': entityClassesToAdd}
+        })
     },
 
     async addEntityTag(entityId:number, tagToAdd:any): Promise<any> {
         return axios({
-        url: `/entity/${entityId}/tag`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: {'id': tagToAdd}
-    })
+            url: `/entity/${entityId}/tag`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: {'id': tagToAdd}
+        })
     },
 
     async removeEntityClass(entityId:number, entityClassesToRemove:any): Promise<any> {
         return axios({
-        url: `/entity/${entityId}/entity_class/remove`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: {'entity_class_ids': entityClassesToRemove}
-    })
+            url: `/entity/${entityId}/entity_class/remove`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: {'entity_class_ids': entityClassesToRemove}
+        })
+    },
+
+    async removeEntityTag(entityId:number, tagToRemove:any): Promise<any> {
+        return axios({
+            url: `/entity/${entityId}/untag`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: {'id': tagToRemove}
+        })
     },
 
     async removeTag(tagId: any, removeBody: any): Promise<any> {
@@ -665,14 +759,14 @@ export default (axios: AxiosStatic) => ({
             removeBody.target_type = convertToSnakeCase(removeBody.target_type)
         }
         return axios({
-        url: `/tag/${tagId}/untag`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: removeBody
-    })
+            url: `/tag/${tagId}/untag`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: removeBody
+        })
     },
 
     async removeSource(sourceId: any, removeBody: any): Promise<any> {
@@ -680,39 +774,38 @@ export default (axios: AxiosStatic) => ({
             removeBody.target_type = convertToSnakeCase(removeBody.target_type)
         }
         return axios({
-        url: `/source/${sourceId}/remove`,
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: removeBody
-    })
+            url: `/source/${sourceId}/remove`,
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: removeBody
+        })
     },
-
-
     
     async updateSource(sourceId:any, updateBody:any): Promise<any> {
         return axios({
-        url: `/source/${sourceId}`,
-        method: 'PUT', 
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: updateBody
-    })
+            url: `/source/${sourceId}`,
+            method: 'PUT', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: updateBody
+        })
     },
+
     async updateTag(tagId:any, updateBody:any): Promise<any> {
         return axios({
-        url: `/tag/${tagId}`,
-        method: 'PUT', 
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        withCredentials:true,
-        data: updateBody
-    })
+            url: `/tag/${tagId}`,
+            method: 'PUT', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            withCredentials:true,
+            data: updateBody
+        })
     },
     
     async deleteElementByID(elementID: number, elementType: IRElementType): Promise<any> {

@@ -287,18 +287,6 @@
             }
         }
 
-        @Watch('selectedElementFlairedEntities')
-        onFlairedEntitiesChanged(newVal: Array<any>, oldVal: Array<any>) {
-
-            if (newVal.length > 0) {
-                if (this.elementType != null) {
-                    if (!this.panes[this.elementType].includes('Entities') && this.flairDialog == false) {
-                        this.panes[this.elementType].push('Entities')
-                    }
-                }
-            }
-        }
-
         // Scroll to entry if we navigated to one, also open journal if necessary
         @Watch('$route')
         async onUrlChange(newVal: any, oldVal: any) {

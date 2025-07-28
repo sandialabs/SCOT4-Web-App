@@ -15,7 +15,7 @@
                   @update:items-per-page=onLimitChange
                   @update:sort-by="sortColumnChanged"
                   @update:sort-desc="sortDescChanged"
-                  :footer-props="{'items-per-page-text': `${elementTypePluralized} per page`, 'items-per-page-options':[10,25,50,100], 'show-first-last-page':true, 'show-current-page':true }">
+                  :footer-props="{'items-per-page-text': `${elementTypePluralized.replace('_', ' ')} per page`, 'items-per-page-options':[10,25,50,100], 'show-first-last-page':true, 'show-current-page':true }">
         <template v-slot:top>
             <v-progress-linear indeterminate v-if="retrievingElements"></v-progress-linear>
         </template>
@@ -76,6 +76,43 @@
                                     @click:clear="onFilterInput('', header.value)"
                                     @change="onFilterInput($event, header.value)"
                                     :value="filterText">
+                        </v-combobox>
+                        <v-combobox v-else-if="header.value == 'classes'"
+                                    dense hide-details chips small-chips multiple clearable
+                                    :items="entityClassFilterOptions"
+                                    item-text="name"
+                                    item-value="name"
+                                    :return-object="true"
+                                    :placeholder="header.text"
+                                    :loading="entityClassFilterLoading"
+                                    :search-input.sync="entityClassFilterSearch"
+                                    @click:clear="onFilterInput('', header.value)"
+                                    @change="onFilterInput($event, header.value)"
+                                    :value="filterText">
+                            <template v-slot:selection="{item, disabled, select}">
+                                <v-chip small
+                                        :key="item.name"
+                                        :disabled="disabled"
+                                        @click="select">
+                                    <v-icon v-if="item.icon" left>
+                                        {{ item.icon }}
+                                    </v-icon>
+                                    <span v-if="item.display_name">
+                                        {{ item.display_name }}
+                                    </span>
+                                    <span v-else>
+                                        {{ item }}
+                                    </span>
+                                </v-chip>
+                            </template>
+                            <template v-slot:item="{item, on, attrs}">
+                                <v-list-item v-on="on" v-bind="attrs" color="primary">
+                                    <v-icon class="pr-2">
+                                        {{item.icon}}
+                                    </v-icon>
+                                    {{item.display_name}}
+                                </v-list-item>
+                            </template>
                         </v-combobox>
                         <v-menu v-else-if="header.value == 'created' || header.value == 'occurred_date'"
                                 :close-on-content-click="false"
@@ -203,7 +240,20 @@
                             {{ item[header.value] }}
                         </span>
                         <span :id="elementType + rowIndex + 'Popularity'" v-else-if="header.value == 'popularity_count'">
-                            <PopularityElement :voted="item['popularity_voted']" :count="item[header.value]" :elementID="item['id']" :elementType="elementType"/>
+                            <PopularityElement :voted="item['popularity_voted']" :count="item[header.value]" :elementID="item['id']" :elementType="elementType" />
+                        </span>
+                        <span :id="elementType + rowIndex + 'Class'" v-else-if="header.value == 'classes'">
+                            <v-chip v-for="entityClass in item.classes" small :key="entityClass.name">
+                                <v-icon v-if="entityClass.icon" left>
+                                    {{ entityClass.icon }}
+                                </v-icon>
+                                <span v-if="entityClass.display_name">
+                                    {{ entityClass.display_name }}
+                                </span>
+                                <span v-else>
+                                    {{ entityClass.name }}
+                                </span>
+                            </v-chip>
                         </span>
                         <span v-else>
                             {{ item[header.value] }}
@@ -285,7 +335,7 @@ export default class VuetifyQueueTable extends Vue {
     @Getter('selectedElement', { namespace }) selectedElement: IRElement | null;
     @Getter('selectedElementPaneSize', { namespace }) selectedElementPaneSize: number;
     @Getter('elementListFilterIsDefault', { namespace }) elementListFilterIsDefault: boolean;
-    @Getter('showPopularity', { 'namespace': 'user' }) showPopularity: boolean
+    @Getter('showPopularity', { 'namespace': 'user' }) showPopularity: boolean;
 
     @Action('retrieveSelectedElementbyID', { namespace }) retrieveSelectedElementbyID: any;
     @Action('retrieveElementListWithFilter', { namespace }) retrieveElementListWithFilter: CallableFunction;
@@ -295,6 +345,7 @@ export default class VuetifyQueueTable extends Vue {
     @Action('promoteElements', { namespace }) promoteElements: CallableFunction;
     @Action('retrieveSources', { namespace }) retrieveSources: CallableFunction;
     @Action('retrieveTags', { namespace }) retrieveTags: CallableFunction;
+    @Action('retrieveAllEntityClasses', { namespace }) retrieveAllEntityClasses: CallableFunction;
 
     manualClick: boolean = false
     tabulator: any = null
@@ -307,6 +358,9 @@ export default class VuetifyQueueTable extends Vue {
     tagFilterSearch: string = ""
     tagFilterLoading: boolean = false
     tagFilterOptions: Array<any> = []
+    entityClassFilterSearch: string = ""
+    entityClassFilterLoading: boolean = false
+    entityClassFilterOptions: Array<any> = []
     createdDateRange: Array<string> = []
     modifiedDateRange: Array<string> = []
     filterText: string | null = null // Only used to clear filter text
@@ -315,6 +369,7 @@ export default class VuetifyQueueTable extends Vue {
     async mounted() {
         this.tagFilterOptions = await this.retrieveTags({ limit: 25 })
         this.sourceFilterOptions = await this.retrieveSources({ limit: 25 })
+        this.entityClassFilterOptions = await this.retrieveAllEntityClasses()
         document.addEventListener('keydown', this.handleKeyboardShortcuts)
     }
 
@@ -477,6 +532,10 @@ export default class VuetifyQueueTable extends Vue {
         if (input != "" && input != null) {
             this.setElementListPage(1)
             if (input instanceof Array) {
+                // Entity classes need to get returned as objects instead of strings
+                if (filterName == "classes") {
+                    input = input.map((ec) => ec.name)
+                }
                 //if we are doing date filters make sure they are ranges
                 if (filterName == "created" || filterName == "modified") {
                     this.setElementListFilterItem({ key: filterName, value: `(${input.toString()})` })

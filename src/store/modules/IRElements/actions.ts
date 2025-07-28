@@ -131,7 +131,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             payload['elementType'] = IRElementType.Signature
             commit('retrieveLinkedElementsSuccess', payload)
         }
-
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
@@ -145,14 +144,12 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             payload['elementType'] = IRElementType.Signature
             commit('retrieveLinkedElementsSuccess', payload)
         }
-
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
     },
 
     async retrieveLinkedGuides({ commit }, { associatedSigGuideMap }): Promise<any> {
-
         try {
             const payload: any = {}
             const guidesRetrieved: Array<any> = []
@@ -166,15 +163,12 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             payload['elementType'] = IRElementType.Guide
             commit('retrieveLinkedElementsSuccess', payload)
         }
-
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
-
         }
     },
 
     async retrieveLinkedElementEntries({ commit }, { linkedElementId, linkedElementIndex, linkedElementType }): Promise<any> {
-
         try {
             const payload: any = {}
             const resp = await Vue.prototype.$api.elements.retrieveElementEntriesbyID(linkedElementId, linkedElementType)
@@ -186,10 +180,8 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             commit('retrieveLinkedElementsSuccess', { "data": respEntity.data.result, "elementType": IRElementType.Entity })
             commit('retrieveLinkedElementEntriesSuccess', payload)
         }
-
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
-
         }
     },
 
@@ -208,22 +200,20 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             const entryResp = await Vue.prototype.$api.elements.retrieveElementEntriesbyID(elementID, elementType)
             commit('retrieveElementEntriesbyIDSuccess', { "data": entryResp.data, "elementType": elementType })
             // Check to see if we have any unsubmitted (still being edited) entries for this element
-            const unsumbittedEditedEntry = await Vue.prototype.$storage.getItem('unsubmittedEditorEntry:' + elementType + ':' + elementID)
-            if (unsumbittedEditedEntry != null) {
-                if (unsumbittedEditedEntry == -1) {
+            const unsubmittedEditedEntry = await Vue.prototype.$storage.getItem('unsubmittedEditorEntry:' + elementType + ':' + elementID)
+            if (unsubmittedEditedEntry != null) {
+                if (unsubmittedEditedEntry == -1) {
                     // since this is unsubmitted, we know the entryId will be -1
                     const editorEntryContent = await Vue.prototype.$storage.getItem('editorContent' + ':' + elementType + ':' + elementID + ':' + '-1')
                     commit('addNewEntryWithEditModeOn', editorEntryContent)
-
                 }
                 else {
-                    // There is an unsubitted already existing entry
-                    const entryData = entryResp.data.result.find((entry: any) => entry.id === unsumbittedEditedEntry).entry_data
-                    const editorEntryContent = await Vue.prototype.$storage.getItem('editorContent' + ':' + elementType + ':' + elementID + ':' + String(unsumbittedEditedEntry))
-                    editorEntryContent['entryId'] = unsumbittedEditedEntry
+                    // There is an unsubmitted already existing entry
+                    const entryData = entryResp.data.result.find((entry: any) => entry.id === unsubmittedEditedEntry).entry_data
+                    const editorEntryContent = await Vue.prototype.$storage.getItem('editorContent' + ':' + elementType + ':' + elementID + ':' + String(unsubmittedEditedEntry))
+                    editorEntryContent['entryId'] = unsubmittedEditedEntry
                     editorEntryContent['server_entry_data'] = entryData
-                    await Vue.prototype.$storage.setItem('editorContent' + ':' + elementType + ':' + elementID + ':' + String(unsumbittedEditedEntry), editorEntryContent)
-
+                    await Vue.prototype.$storage.setItem('editorContent' + ':' + elementType + ':' + elementID + ':' + String(unsubmittedEditedEntry), editorEntryContent)
                     commit('restoreCachedExistingEntryEditor', editorEntryContent)
                 }
             }
@@ -276,13 +266,10 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                 commit('retrieveEntityPivotsSuccess', {entityAppearances: respEntityPivot.data.result})
                 const respEntityEnrichment = await Vue.prototype.$api.elements.retrieveEntityEnrichmentsbyID(elementID, state.SelectedElementAbortController)
                 commit('retrieveEntityEnrichmentsSuccess', {entityAppearances: respEntityEnrichment.data.result})
-
             }
 
             if (elementType != IRElementType.Alertgroup && elementType != IRElementType.Alert && elementType != IRElementType.Pivot && elementType != IRElementType.EntityClass && !state.SelectedElementAbortController?.signal.aborted) {
-
                 // This an entry-based IR Element get the entries as well here. 
-
                 try {
                     const entryResp = await Vue.prototype.$api.elements.retrieveElementEntriesbyID(elementID, elementType, state.SelectedElementAbortController)
                     commit('retrieveElementEntriesbyIDSuccess', { "data": entryResp.data, "elementType": elementType })
@@ -296,7 +283,7 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                             commit('addNewEntryWithEditModeOn', editorEntryContent)
                         }
                         else {
-                            // There is an unsubitted already existing entry
+                            // There is an unsubmitted already existing entry
                             const entry = entryResp.data.result.find((entry: any) => entry.id === unsubmittedEditedEntry)
                             if (entry && 'entry_data' in entry) {
 
@@ -305,9 +292,9 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                                     ':' + elementType + ':' + elementID + ':' + String(unsubmittedEditedEntry))
                                 editorEntryContent['entryId'] = unsubmittedEditedEntry
                                 editorEntryContent['server_entry_data'] = entryData
-                                const a = await Vue.prototype.$storage.setItem('editorContent' +
+                                await Vue.prototype.$storage.setItem('editorContent' +
                                     ':' + elementType + ':' + elementID + ':' + String(unsubmittedEditedEntry), editorEntryContent)
-                                const t = await Vue.prototype.$storage.getItem('editorContent' +
+                                await Vue.prototype.$storage.getItem('editorContent' +
                                     ':' + elementType + ':' + elementID + ':' + String(unsubmittedEditedEntry))
                                 commit('restoreCachedExistingEntryEditor', editorEntryContent)
                             }
@@ -401,9 +388,13 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         commit('addFlairedEntityPivotsAndEnrichmentsSuccess', {entity:entity, entityPivots: respEntityPivot.data.result, entityEnrichments: respEntityEnrichment.data })
     },
 
-
     async resetFlairedEnrichmentsAndPivotsValue( { commit }): Promise<any>{
         commit('resetFlairedEnrichmentsAndPivotsEvent')
+    },
+
+    async enrichEntityByID({ commit }, { entityID }): Promise<any>{
+        const respEntity = await Vue.prototype.$api.elements.requestEntityReEnrichmentbyID(entityID)
+        return(respEntity.data)
     },
 
     async retrieveEntityAppearancesbyID({ commit }, { entity }): Promise<any>{
@@ -434,12 +425,10 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
 
     async retrieveSelectedElementFilesbyID({ commit, state }, { elementID, elementType }): Promise<any> {
         // Let's get the entities for the element as well
-        if (state.SelectedElement?.ElementType == elementType && state.SelectedElement?.id == elementID)
-        {
+        if (state.SelectedElement?.ElementType == elementType && state.SelectedElement?.id == elementID) {
             const respEntity = await Vue.prototype.$api.elements.retrieveElementFilesbyID(elementID, elementType)
             commit('retrieveElementFilesbyIDSuccess', { "data": respEntity.data, "elementType": elementType })
         }
-       
     },
 
     async augmentSelectedElementEntries({ commit, state }, { entryID }): Promise<any> {
@@ -493,7 +482,7 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
     },
 
     async augmentSelectedElementEntitiesById({ commit, state }, { entityIds, showLoading = true }): Promise<any> {
-        // Get the given entites and add them to the select element's entity list
+        // Get the given entities and add them to the select element's entity list
         try {
             if (showLoading) {
                 commit('entitiesLoading')
@@ -519,7 +508,7 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         try {
             const extraBody = {'create_flair_regex': createEntityRegex}
             const entityBody = {'value': entityText, 'type_name': entityType}
-            const respEntity = await Vue.prototype.$api.elements.createElement(IRElementType.Entity,  entityBody, extraBody )
+            await Vue.prototype.$api.elements.createElement(IRElementType.Entity,  entityBody, extraBody )
             commit('entitiesLoaded', true)
         }
         catch (e: any) {
@@ -549,7 +538,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                 if (editorEntryContent != null && editorEntryContent['server_entry_data'] != null) {
                     //We need to revert the entry_data back to this value here
                     commit('changeEntryToViewMode', { "entryId": entryId, "treePath": treePath, "entry_data": editorEntryContent["server_entry_data"] })
-
                 }
                 else {
                     commit('changeEntryToViewMode', { "entryId": entryId, "treePath": treePath, "entry_data": null })
@@ -572,7 +560,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                         "entryId": entryId, "entry_data": editorEntryContent["server_entry_data"],
                         "linkedElementType": linkedElementType, "linkedElementIndex": linkedElementIndex, "linkedElementId": linkedElementId
                     })
-
                 }
                 else {
                     commit('changeEntryToViewMode', {
@@ -613,7 +600,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
 
     },
 
-
     async promoteSelectedAlerts({ commit }, { selectedAlertIds, newSources, newTags }): Promise<any> {
         try {
             const resp = await Vue.prototype.$api.elements.promoteElements(selectedAlertIds, IRElementType.Alert, newTags, newSources)
@@ -624,10 +610,16 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             commit('errorOccurred', e, { root: true })
         }
     },
-    async promoteSelectedAlertsToExisting({ commit }, { selectedAlertIds, existingEventId, newTags, newSources }): Promise<any> {
+
+    async promoteSelectedToExisting({ commit }, { selectedIds, elementType, existingEventId, newTags, newSources }): Promise<any> {
         try {
-            const resp = await Vue.prototype.$api.elements.promoteElementsToExisting(selectedAlertIds, IRElementType.Alert, existingEventId, newTags, newSources)
-            commit('promoteAlertsSuccessful', { "promotedAlerts": selectedAlertIds, "data": resp.data })
+            const resp = await Vue.prototype.$api.elements.promoteElementsToExisting(selectedIds, elementType, existingEventId, newTags, newSources)
+            if (elementType == IRElementType.Alert) {
+                commit('promoteAlertsSuccessful', { "promotedAlerts": selectedIds, "data": resp.data })
+            }
+            else {
+                commit('promoteElementsSuccess', { "promotedIds": selectedIds, "promotedType": elementType, "newObject": resp.data })
+            }
         }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
@@ -660,11 +652,9 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         if (linkedElementId == null && linkedElementIndex == null && linkedElementType == null) {
             try {
                 const editorCacheObj: any = { entryData: { html: editorContent }, server_entry_data: null, IRElementType: elementType, IRElementTypeId: elementId, EntryClassEnum: entryType, owner: owner, TLPCode: tlp, treePath: treePath }
-
                 const existingCache = await Vue.prototype.$storage.getItem('editorContent' + ':' + elementType + ':' + elementId + ':' + entryId)
                 if (existingCache && existingCache['server_entry_data']) {
                     editorCacheObj['server_entry_data'] = existingCache['server_entry_data']
-
                 }
                 await Vue.prototype.$storage.setItem('editorContent' + ':' + elementType + ':' + elementId + ':' + entryId, editorCacheObj)
                 await Vue.prototype.$storage.setItem('unsubmittedEditorEntry:' + elementType + ':' + elementId, entryId)
@@ -674,10 +664,8 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             }
         }
         else {
-
             try {
                 const editorCacheObj = { entryData: { html: editorContent }, IRElementType: linkedElementType, IRElementTypeId: linkedElementId, EntryClassEnum: entryType, owner: owner, TLPCode: tlp }
-
                 Vue.prototype.$storage.setItem('editorContent' + ':' + linkedElementType + ':' + linkedElementId + ':' + entryId, editorCacheObj)
                 Vue.prototype.$storage.setItem('unsubmittedEditorEntry:' + linkedElementType + ':' + linkedElementId, entryId)
             }
@@ -706,7 +694,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                 commit('errorOccurred', e, { root: true })
             }
         }
-
     },
 
     async updateOrCreateEntryContent({ commit, rootState }, { entryId, entryType, elementId, elementType, entryOwner, entryContent, linkedElementId, linkedElementType, linkedElementIndex, treePath }): Promise<boolean> {
@@ -725,12 +712,11 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                     }
                     commit('changeEntryToLoading', { "entryId": entryId, "treePath": treePath })
                     const resp = await Vue.prototype.$api.elements.updateOrCreateEntry(entryId, entryCreateOrUpdateAttributes)
+                    resp.data['treePath'] = treePath
+                    commit('updateOrCreateEntrySuccess', resp.data)
                     commit('removeEntrySuccess', { "entryId": entryId, "treePath": treePath })
                     await Vue.prototype.$storage.removeItem('editorContent' + ':' + elementType + ':' + elementId + ':' + entryId)
                     await Vue.prototype.$storage.removeItem('unsubmittedEditorEntry:' + elementType + ':' + elementId)
-                    resp.data['treePath'] = treePath
-                    commit('updateOrCreateEntrySuccess', resp.data)
-
                 }
                 else {
                     // Don't change entry type if not given, also don't change entry owner from this function
@@ -770,15 +756,14 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                         parent_entry_id: getParentEntryId(treePath)
                     }
                     const resp = await Vue.prototype.$api.elements.updateOrCreateEntry(entryId, entryCreateOrUpdateAttributes)
-                    commit('removeEntrySuccess', { "entryId": entryId, "linkedElementType": linkedElementType, "linkedElementIndex": linkedElementIndex, "linkedElementId": linkedElementId, "treePath": treePath })
-                    await Vue.prototype.$storage.removeItem('editorContent' + ':' + linkedElementType + ':' + linkedElementId + ':' + entryId)
-                    await Vue.prototype.$storage.removeItem('unsubmittedEditorEntry:' + linkedElementType + ':' + linkedElementId)
                     resp.data['linkedElementType'] = linkedElementType
                     resp.data['linkedElementId'] = linkedElementId
                     resp.data['linkedElementIndex'] = linkedElementIndex
                     resp.data['treePath'] = treePath
                     commit('updateOrCreateEntrySuccess', resp.data)
-
+                    commit('removeEntrySuccess', { "entryId": entryId, "linkedElementType": linkedElementType, "linkedElementIndex": linkedElementIndex, "linkedElementId": linkedElementId, "treePath": treePath })
+                    await Vue.prototype.$storage.removeItem('editorContent' + ':' + linkedElementType + ':' + linkedElementId + ':' + entryId)
+                    await Vue.prototype.$storage.removeItem('unsubmittedEditorEntry:' + linkedElementType + ':' + linkedElementId)
                 }
                 else {
                     // Don't change entry type if not given, also don't change entry owner from this function
@@ -864,8 +849,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
             }
         },
 
-
-
     async openFlairMenu({ commit }, { menuX, menuY, menuEntity }): Promise<any> {
         commit('setFlairMenuPosition', { x: menuX, y: menuY })
         commit('setFlairMenuVisible', true)
@@ -888,13 +871,78 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         }
     },
 
+    async deleteTag({ commit }, id): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.elements.deleteTag(id)
+            commit('deleteTagSuccess', resp.data)
+            return resp.data.result
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async replaceTagOrSource({ commit }, {type, id, replaceId}): Promise<any> {
+        try {
+            if (type == "tag") {
+                const resp = await Vue.prototype.$api.elements.replaceTag(id, replaceId)
+                commit('replaceTagSuccess', id, resp.data)
+                return resp.data.result
+            }
+            else if (type == "source") {
+                const resp = await Vue.prototype.$api.elements.replaceSource(id, replaceId)
+                commit('replaceSourceSuccess', id, resp.data)
+                return resp.data.result
+            }
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async tagOrSourceAppearances({ commit }, {type, filterDict}): Promise<any> {
+        try {
+            if (type == "tag") {
+                const resp = await Vue.prototype.$api.elements.tagAppearances(filterDict)
+                return resp.data
+            }
+            else if (type == "source") {
+                const resp = await Vue.prototype.$api.elements.sourceAppearances(filterDict)
+                return resp.data
+            }
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async retrieveTagsOrSources({commit}, {type, filterDict}): Promise<any> {
+        try {
+            if (type == "tag") {
+                const resp = await Vue.prototype.$api.elements.retrieveTags(filterDict)
+                commit('retrieveTagsSuccess', resp.data)
+                return resp.data.result
+            }
+            else if (type == "source") {
+                const resp = await Vue.prototype.$api.elements.retrieveSources(filterDict)
+                commit('retrieveSourcesSuccess', resp.data)
+                return resp.data.result
+            }
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
     async retrieveAllEntityClasses({ commit }): Promise<any> {
         try {
             const resp = await Vue.prototype.$api.elements.retrieveAllEntityClasses()
             commit('retrieveAllEntityClassesSuccess', resp.data)
+            return resp.data.result
         }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
+            return null
         }
     },
 
@@ -919,6 +967,45 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         }
     },
 
+    async deleteSource({ commit }, id): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.elements.deleteSource(id)
+            commit('deleteSourceSuccess', resp.data)
+            return resp.data.result
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async deleteTagOrSource({ commit }, {type, id}): Promise<any> {
+        try {
+            if (type == "tag") {
+                const resp = await Vue.prototype.$api.elements.deleteTag(id)
+                commit('deleteTagSuccess', resp.data)
+                return resp.data.result
+            }
+            else if (type == "source") {
+                const resp = await Vue.prototype.$api.elements.deleteSource(id)
+                commit('deleteSourceSuccess', resp.data)
+                return resp.data.result
+            }
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async replaceSource({ commit }, {id, replaceId}): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.elements.replaceSource(id, replaceId)
+            commit('replaceSourceSuccess', id, resp.data)
+            return resp.data.result
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
 
     async submitTagsOrSources({ commit }, { newTagsOrSources, type, targetElementId, targetElementType }): Promise<any> {
         try {
@@ -951,14 +1038,21 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         }
     },
 
-
     async submitEntityClasses({ commit }, { newEntityClasses, targetEntityId}): Promise<any> {
         try {
-                let resp = null
-                resp = await Vue.prototype.$api.elements.addEntityClass(targetEntityId, newEntityClasses)
-                commit('addEntityClassesSuccess', resp.data)
-            }
-        
+            const resp = await Vue.prototype.$api.elements.addEntityClass(targetEntityId, newEntityClasses)
+            commit('addEntityClassesSuccess', resp.data)
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async submitEntityTag({ commit }, { newEntityTag, targetEntityId}): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.elements.addEntityTag(targetEntityId, newEntityTag)
+            commit('addEntityClassesSuccess', resp.data)
+        }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
@@ -966,12 +1060,10 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
 
     async attachEntityClassesToPivot({ commit }, { pivotId, entityClasses}): Promise<any> {
         try {
-                let resp = null
-                resp = await Vue.prototype.$api.elements.submitPivotEntityClasses(pivotId, entityClasses)
-                commit('retrieveElementbyIDSuccess', { "data": resp.data, "elementType": IRElementType.Pivot })
-
-            }
-        
+            let resp = null
+            resp = await Vue.prototype.$api.elements.submitPivotEntityClasses(pivotId, entityClasses)
+            commit('retrieveElementbyIDSuccess', { "data": resp.data, "elementType": IRElementType.Pivot })
+        }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
@@ -979,12 +1071,10 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
 
     async attachEntityTypesToPivot({ commit }, { pivotId, entityTypes}): Promise<any> {
         try {
-                let resp = null
-                resp = await Vue.prototype.$api.elements.submitPivotEntityTypes(pivotId, entityTypes)
-                commit('retrieveElementbyIDSuccess', { "data": resp.data, "elementType": IRElementType.Pivot })
-
-            }
-        
+            let resp = null
+            resp = await Vue.prototype.$api.elements.submitPivotEntityTypes(pivotId, entityTypes)
+            commit('retrieveElementbyIDSuccess', { "data": resp.data, "elementType": IRElementType.Pivot })
+        }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
@@ -992,11 +1082,26 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
 
     async removeEntityClasses({ commit }, { entityClassId, targetEntityId}): Promise<any> {
         try {
-                let resp = null
-                resp = await Vue.prototype.$api.elements.removeEntityClass(targetEntityId, [entityClassId])
-                commit('removeEntityClassesSuccess', resp.data)
+            let entityClassIds = []
+            if (typeof entityClassId == 'number') {
+                entityClassIds.push(entityClassId)
             }
-        
+            else {
+                entityClassIds = entityClassId
+            }
+            const resp = await Vue.prototype.$api.elements.removeEntityClass(targetEntityId, entityClassIds)
+            commit('removeEntityClassesSuccess', resp.data)
+        }
+        catch (e: any) {
+            commit('errorOccurred', e, { root: true })
+        }
+    },
+
+    async removeEntityTag({ commit }, { entityTagId, targetEntityId}): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.elements.removeEntityTag(targetEntityId, entityTagId)
+            commit('removeEntityTagSuccess', resp.data)
+        }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
         }
@@ -1015,7 +1120,6 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
                 resp.data['type'] = "tag"
             }
             else {
-
                 resp = await Vue.prototype.$api.elements.removeSource(id, removeBody)
                 resp.data['type'] = "source"
             }
@@ -1026,17 +1130,24 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
         }
     },
 
-    async updateTagOrSourceDescription({ commit }, { id, type, description }): Promise<any> {
+    async updateTagOrSource({ commit }, { id, type, description, name=null }): Promise<any> {
         try {
             let resp = null
-            if (type == "tag") {
-                resp = await Vue.prototype.$api.elements.updateTag(id, { description: description })
+            let data = {}
+            if (name !== null) {
+                data = { description: description, name: name }
             }
             else {
-                resp = await Vue.prototype.$api.elements.updateSource(id, { description: description })
+                data = { description: description }
+            }
+            if (type == "tag") {
+                resp = await Vue.prototype.$api.elements.updateTag(id, data)
+            }
+            else {
+                resp = await Vue.prototype.$api.elements.updateSource(id, data)
 
             }
-            commit('updateTagOrSourceDescriptionSuccess', resp.data)
+            commit('updateTagOrSourceSuccess', resp.data)
         }
         catch (e: any) {
             commit('errorOccurred', e, { root: true })
@@ -1046,11 +1157,11 @@ export const actions: ActionTree<IRElementsListState, RootState> = {
     async removeEntryByID({ commit }, { entryId, treePath, linkedElementId, linkedElementType, linkedElementIndex }): Promise<any> {
         try {
             if (linkedElementId == null && linkedElementIndex == null && linkedElementType == null) {
-                const resp = await Vue.prototype.$api.elements.deleteEntryByID(entryId)
+                await Vue.prototype.$api.elements.deleteEntryByID(entryId)
                 commit('removeEntrySuccess', { "entryId": entryId, "treePath": treePath, "linkedElementType": linkedElementType, "linkedElementIndex": linkedElementIndex, "linkedElementId": linkedElementId })
             }
             else {
-                const resp = await Vue.prototype.$api.elements.deleteEntryByID(entryId)
+                await Vue.prototype.$api.elements.deleteEntryByID(entryId)
                 commit('removeEntrySuccess', { "entryId": entryId, "linkedElementType": linkedElementType, "linkedElementIndex": linkedElementIndex, "linkedElementId": linkedElementId, "treePath": treePath })
             }
         }

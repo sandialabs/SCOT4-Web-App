@@ -101,7 +101,7 @@
                                 </v-card-subtitle>
                                 <v-card-text :style="notification.ack ? '' : 'font-weight: bold'">
                                     <div class="text--primary notification-text">{{notification.message}}</div>
-                                    <div class="pt-1 mb-n2 ml-n1">{{getRelativeTime(notification.created)}}</div>
+                                    <div class="pt-1 mb-n2 ml-n1"><i>{{getRelativeTime(notification.created)}}</i></div>
                                 </v-card-text>
                             </v-card>
                         </v-list-item-content>
@@ -114,7 +114,7 @@
                     </v-list-item>
                     <v-divider />
                 </v-list>
-                <v-list v-else>
+                <v-list v-else class="pb-0 notifications-list">
                     <v-list-item ß>
                         <v-list-item-content>
                             <v-list-item-title>
@@ -297,7 +297,7 @@
         @Action('clearSelectedElement', { 'namespace': 'IRElements' }) clearIRElement: CallableFunction
         @Action('getCurrentIH', { 'namespace': 'team' }) getCurrentIH: CallableFunction
         @Action('retrieveGlobalSettings', { 'namespace': 'team' }) retrieveGlobalSettings: CallableFunction
-        @Action('searchText', { namespace }) searchText: CallableFunction
+        @Action('performTextSearch', { namespace }) performTextSearch: CallableFunction
         @Action('clearSearchResults', { namespace }) clearSearchResults: CallableFunction
         @Action('changeShowSearchOverlay', { namespace }) changeShowSearchOverlay: CallableFunction
         @Action('ackNotifications', { namespace }) ackNotifications: CallableFunction
@@ -308,13 +308,13 @@
 
         responseItems: Array<string> = ["Alertgroups", "Events", "Incidents"]
         threatItems: Array<string> = ["Dispatches", "Intels", "Products", "Feeds", "Entities"]
-        toolItems: Array<string> = ["Tasks", "Signatures", "Guides", "Pivots", "Entity Classes"]
+        toolItems: Array<string> = ["Tasks", "Signatures", "Guides", "Pivots", "Entity Classes", "Tags", "Sources", "Stats"]
         vulnerabilityItems: Array<string> = ["Vuln Feed", "Vuln Track"]
         accountItems: Array<string> = ["Logout"]
         tabs: Array<any> = [
             { tabName: "Response", subTabs: this.responseItems, routes: this.responseItems.map((t) => '/' + t.toLowerCase().replace(' ', '_')) },
             { tabName: "Threat", subTabs: this.threatItems, routes: this.threatItems.map((t) => '/' + t.toLowerCase().replace(' ', '_')) },
-            { tabName: "Vulnerability", subTabs: this.vulnerabilityItems, routes: this.vulnerabilityItems.map((t) => '/' + t.toLowerCase().replace(' ', '_')) },
+            { tabName: "Vulnerability", subTabs: this.vulnerabilityItems, routes: this.vulnerabilityItems.map((t) => '/' + t.toLowerCase().replace(' ', '_') + 's') },
             { tabName: "Tools", subTabs: this.toolItems, routes: this.toolItems.map((t) => '/' + t.toLowerCase().replace(' ', '_')) },
         ]
 
@@ -351,7 +351,7 @@
         }
 
         async logout() {
-            this.$router.push('/login').catch((err: any) => { return })
+            this.$router.push('/login').catch(() => { return })
             await this.clearIRElement()
             await this.logoutAction()
         }
@@ -496,7 +496,7 @@
         async onSearchKeyDown(e: KeyboardEvent) {
             if (e.key === 'Enter' && this.currentlySearching === false) {
                 this.currentlySearching = true
-                await this.searchText({ searchText: this.searchInput })
+                await this.performTextSearch({ searchText: this.searchInput })
                 this.currentlySearching = false
                 this.changeShowSearchOverlay({ value: true })
                 this.clearSearchIcon = "mdi-close"
@@ -535,7 +535,7 @@
             else if (target == "entry") {
                 return "entries"
             }
-            else{
+            else {
                 return target + "s"
             }
         }

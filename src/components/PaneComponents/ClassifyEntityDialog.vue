@@ -2,7 +2,7 @@
     <v-dialog v-model="dialogOpen" max-width="600px">
         <v-card>
             <v-card-title>
-                Add Class and/or Tag:
+                {{ isRemove ? "Remove" : "Add" }} Class and/or Tag:
             </v-card-title>
             <v-card-text>
                 <v-form ref="classifyForm">
@@ -43,6 +43,9 @@
                     <v-alert v-if="errorMessage" type="error" dismissible @input="errorMessage = ''">
                         {{ errorMessage }}
                     </v-alert>
+                    <!---Section for Comment Entry -->
+                    <v-divider></v-divider>
+                    <v-textarea label="Add Comments" outlined v-model="comments"></v-textarea>
                 </v-form>
             </v-card-text>
             <v-card-actions>
@@ -58,13 +61,26 @@
 </template>
 
 <script lang="ts">
+import { EntryClassEnum, IRElementType } from '@/store/modules/IRElements/types';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
-import { IRElementType} from "@/store/modules/IRElements/types"
+import { Action, Getter } from 'vuex-class';
+import { User } from '@/store/modules/user/types'
+const namespace: string = 'IRElements';
 
 @Component
 export default class ClassifyModal extends Vue {
     @Prop({ default: false }) value!: boolean;
     @Prop({ default: () => [] }) selectedEntityIds!: number[];
+    @Prop({ default: () => [] }) selectedEntityClasses!: any[];
+    @Prop({ default: () => [] }) selectedEntityTags!: any[];
+    @Prop({ default: false }) isRemove!: boolean;
+    @Action('removeEntityClasses', { namespace }) removeEntityClasses: CallableFunction;
+    @Action('submitEntityClasses', { namespace }) submitEntityClasses: CallableFunction;
+    @Action('removeEntityTag', { namespace }) removeEntityTag: CallableFunction;
+    @Action('submitEntityTag', { namespace }) submitEntityTag: CallableFunction;
+    @Action('updateOrCreateEntryContent', { namespace }) updateOrCreateEntryContent: CallableFunction
+    @Getter('currentUser', { 'namespace': 'user' }) currentUser: User;
+
 
     dialogOpen: boolean = false;
     selectedClass: string = '';
@@ -77,10 +93,10 @@ export default class ClassifyModal extends Vue {
     classSearch: string = '';
     tagSearch: string = '';
     errorMessage: string = '';
+    comments: string = '';
 
     mounted() {
         this.dialogOpen = this.value;
-        this.loadClassTypes();
     }
 
     @Watch('value')
@@ -91,19 +107,30 @@ export default class ClassifyModal extends Vue {
     @Watch('dialogOpen')
     onDialogChange(newVal: boolean) {
         this.$emit('input', newVal);
+        this.loadClassTypes();
+        if (this.isRemove) {
+            this.tags = this.selectedEntityTags
+        }
     }
 
     async loadClassTypes() {
-        const abortController = new AbortController();
         try {
             const filterDict = {
                 limit: -1
             };
-            const response = await Vue.prototype.$api.elements.retrieveAllEntityClasses(filterDict)
-            this.classes = response.data.result.map((item: any) => ({
-                id: item.id,
-                name: item.display_name
-            }));
+            if (this.isRemove) {
+                this.classes = this.selectedEntityClasses.map((item: any) => ({
+                    id: item.id,
+                    name: item.display_name
+                }))
+            }
+            else {
+                const response = await Vue.prototype.$api.elements.retrieveAllEntityClasses(filterDict)
+                this.classes = response.data.result.map((item: any) => ({
+                    id: item.id,
+                    name: item.display_name
+                }));
+            }
         } catch (error) {
             this.errorMessage = 'Error fetching class types';
             console.error('Error fetching class types:', error);
@@ -114,10 +141,14 @@ export default class ClassifyModal extends Vue {
         this.tagSearch = search;
         this.loading = true;
         try {
-            const filterDict = {
+            let filterDict: any = {
                 name: search,
                 limit: 10
             };
+            //force the search to only include ids of the selected entity if any
+            if (this.isRemove && this.selectedEntityTags.length > 0) {
+                filterDict.id = `[${this.selectedEntityTags.map((a: any) => {return a.id}).join()}]`
+            }
             const response = await Vue.prototype.$api.elements.retrieveTags(filterDict); // Call the search API for tags
             this.tags = response.data.result.map((item: any) => ({
                 id: item.id,
@@ -154,8 +185,14 @@ export default class ClassifyModal extends Vue {
                     return;
                 }
                 const entityClassesToAdd = [selectedClassType.id];
-                // Call addEntityClass for each selected entity ID
-                await Promise.all(this.selectedEntityIds.map(id => Vue.prototype.$api.elements.addEntityClass(id, entityClassesToAdd)));
+                for (var i = 0; i < this.selectedEntityIds.length; i++) {
+                    if (this.isRemove) {
+                        await this.removeEntityClasses({entityClassId: entityClassesToAdd, targetEntityId: this.selectedEntityIds[i]})
+                    }
+                    else {
+                        await this.submitEntityClasses({newEntityClasses: entityClassesToAdd, targetEntityId: this.selectedEntityIds[i]})
+                    }
+                }
             } 
             if (this.selectedTag) {
                 const selectedTagType = this.tags.find(type => type.name === this.selectedTag);
@@ -163,19 +200,37 @@ export default class ClassifyModal extends Vue {
                     this.errorMessage = 'Selected tag not found';
                     return;
                 }
-                // Call addTag for each selected entity ID
-                await Promise.all(this.selectedEntityIds.map(id => Vue.prototype.$api.elements.addEntityTag(id, selectedTagType.id)));
+                for (var j = 0; j < this.selectedEntityIds.length; j++) {
+                    if (this.isRemove) {
+                        await this.removeEntityTag({entityTagId: selectedTagType.id, targetEntityId: this.selectedEntityIds[j]})
+                    }
+                    else {
+                        await this.submitEntityTag({newEntityTag: selectedTagType.id, targetEntityId: this.selectedEntityIds[j]})
+                    }
+                }
+            }
+
+            if (this.comments) {
+                for (var k = 0; k < this.selectedEntityIds.length; k++) {
+                    await Vue.prototype.$api.elements.updateOrCreateEntry(-1, {
+                        owner: this.currentUser.username,
+                        target_type: IRElementType.Entity,
+                        target_id: this.selectedEntityIds[k],
+                        entry_class: EntryClassEnum.entry,
+                        entry_data: {"html": `<p>${this.comments}</p>`},
+                    })
+                }
             }
             this.$emit('submit-success');
-            this.submitLoading = false;
             this.dialogOpen = false;
             this.closeModal();
         } catch (error) {
             this.errorMessage = 'Error during classification or tagging';
-            this.submitLoading = false;
-            console.error('Error during classification or tagging:', error);
+            console.error(this.errorMessage, error);
         }
         finally {
+            this.submitLoading = false;
+            this.comments = ""
             this.selectedClass = '';
             this.selectedTag = '';
         }

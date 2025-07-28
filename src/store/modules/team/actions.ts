@@ -144,6 +144,30 @@ export const actions: ActionTree<TeamState, RootState> = {
         }
     },
 
+    async retrieveMetricResults({ commit }): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.team.getMetricResults()
+            commit('retrieveMetricResultsSuccess', resp.data)
+            return true
+        }
+        catch (e) {
+            commit('errorOccurred', e, { root: true })
+            return false
+        }
+    },
+    
+    async retrieveSpecialMetric({ commit }): Promise<any> {
+        try {
+            const resp = await Vue.prototype.$api.team.getSpecialMetric()
+            commit('retrieveSpecialMetricSuccess', resp.data.result)
+            return true
+        }
+        catch (e) {
+            commit('errorOccurred', e, { root: true })
+            return false
+        }
+    },
+
     async retrieveUserActivity({ commit }): Promise<any> {
         try {
             const resp = await Vue.prototype.$api.team.getUserActivity()

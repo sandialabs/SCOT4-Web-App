@@ -11,6 +11,9 @@ import FullScreenEntry from '../views/FullScreenEntry.vue'
 import EntityClassIcons from '../views/EntityClassIcons.vue'
 import { IRElementType } from '@/store/modules/IRElements/types'
 import UserSettingsView from '../views/UserSettings.vue'
+import Stats from '../views/Stats.vue'
+import TagsSources from "../views/TagsSources.vue"
+
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
@@ -78,13 +81,6 @@ const routes: Array<RouteConfig> = [
         component: Response,
         meta: { itemType: IRElementType.VulnTrack },
         alias: '/vuln_track/:id?/:entryId?'
-    },
-    {
-        path: '/events/:id?/:entryId?',
-        name: 'Events',
-        component: Response,
-        meta: { itemType: IRElementType.Event },
-        alias: '/event/:id?/:entryId?'
     },
     {
         path: '/signatures/:id?/:entryId?',
@@ -156,6 +152,18 @@ const routes: Array<RouteConfig> = [
         meta: { itemType: IRElementType.EntityClass }
     },
     {
+        path: '/tags/:id?',
+        name: 'Tags',
+        component: TagsSources,
+        meta: { itemType: "tag" }
+    },
+    {
+        path: '/sources/:id?',
+        name: 'Sources',
+        component: TagsSources,
+        meta: { itemType: "source" }
+    },
+    {
         path: '/hunts/:id?/:entryId?',
         name: 'Hunts',
         component: ComingSoon
@@ -179,6 +187,11 @@ const routes: Array<RouteConfig> = [
         path: '/:elementType/:elementId/entry/:entryId/fullScreen',
         name: 'FullScreenEntry',
         component: FullScreenEntry
+    },
+    {
+        path: '/stats',
+        name: 'StatsCentral',
+        component: Stats
     },
 ]
 

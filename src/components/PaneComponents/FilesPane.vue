@@ -6,7 +6,6 @@
                     v-model=selectedFiles
                     ref="filesTable"
                     show-select
-                    single-select
                     :items-per-page=-1
                     :hide-default-footer="true"
                     :loading="retrievingFiles == true">
@@ -24,12 +23,27 @@
                     </v-icon>
                     {{selectedFiles.length > 1 ? "Edit Files" : "Edit File"}}
                 </v-btn>
-                <v-btn v-if="selectedFiles.length > 0" color="green" small class="mr-1" :href="downloadFiles" target="_blank">
-                    <v-icon>
-                        mdi-file-download
-                    </v-icon>
-                    {{selectedFiles.length > 1 ? "Download Files" : "Download File"}}
-                </v-btn>
+                <v-menu v-if="selectedFiles.length > 0" :close-on-content-click="false">
+                    <template v-slot:activator="{on, attrs}">
+                        <v-btn color="green" small class="mr-1" v-bind="attrs" v-on="on">
+                            <v-icon>
+                                mdi-file-download
+                            </v-icon>
+                            Download
+                            <v-icon small>
+                                mdi-chevron-down
+                            </v-icon>
+                        </v-btn>
+                    </template>
+                    <v-list>
+                        <v-list-item class="pt-2">
+                            <v-text-field dense label="Encryption Password" v-model="filePassword" hint="optional" persistent-hint/>
+                        </v-list-item>
+                        <v-list-item :href="downloadFiles" target="_blank">
+                            {{selectedFiles.length > 1 ? "Download Files" : "Download File"}}
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
                 <v-btn v-if="selectedFiles.length > 0" color="red" small @click="removeFiles">
                     <v-icon>
                         mdi-delete
@@ -108,6 +122,7 @@ export default class FilesPane extends Vue {
     editDialog: boolean = false
     editFileDialogLoading: boolean = false
     fileErrorText: string | null = null
+    filePassword: string | null = null
 
 
     async removeFiles() {
@@ -119,7 +134,7 @@ export default class FilesPane extends Vue {
         }
     }
 
-    async onFileSelected(isSelected: any, select: any, e: any, entity: any) {
+    async onFileSelected(isSelected: any, select: any) {
         select(!isSelected)
     }
 
@@ -173,8 +188,13 @@ export default class FilesPane extends Vue {
 
     get downloadFiles() {
         if (this.selectedElement) {
-            const fileId = this.selectedFiles.map(obj => obj.id)[0]
-            return `${Vue.axios.defaults.baseURL}/file/download/${fileId}`
+            let password = ""
+            if (this.filePassword) {
+                password = `&password=${this.filePassword}`
+                this.filePassword = null
+            }
+            const fileIds = this.selectedFiles.map(obj => `ids=${obj.id}`).join("&")
+            return `${Vue.axios.defaults.baseURL}/file/download/many?${fileIds}${password}`
         }
         else {
             return null

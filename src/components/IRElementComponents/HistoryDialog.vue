@@ -3,9 +3,11 @@
         <v-card v-if="target != null && target != undefined" :loading="loading" class="flex-column-noscroll">
             <v-card-title v-if="allowedTypes.length == 1 && allowedTypes[0] == 'read'">{{ targetElementType }} {{ target.id }} View History</v-card-title>
             <v-card-title v-else>{{ targetElementType }} {{ target.id }} Edit History</v-card-title>
-            <v-card-text class="scroll-child">
-                <div v-for="audit in filteredHistory()" v-html="auditEntryDisplay(audit)" :key="audit.id">
-                </div>
+            <v-card-text class="scroll-child" v-if="allowedTypes.length == 1 && allowedTypes[0] == 'read'">
+                <div v-html="readAuditDisplay(filteredHistory())"></div>
+            </v-card-text>
+            <v-card-text class="scroll-child" v-else>
+                <div v-for="audit in filteredHistory()" v-html="auditEntryDisplay(audit)" :key="audit.id"></div>
             </v-card-text>
             <v-card-actions>
                 <v-btn @click="dialogOpen = false">Close</v-btn>
@@ -98,9 +100,30 @@
                 return `${this.transformDateString(audit.when_date)} <b>${audit.username}</b> from IP ${audit.src_ip}`
             }
             if (audit.what == 'update') {
-                let finalDisplay = ''
-                for (const key in audit.audit_data) {
-                    finalDisplay += `${this.transformDateString(audit.when_date)} <b>${audit.username}</b> changed ${key} to ${JSON.stringify(audit.audit_data[key])}`
+                let finalDisplay = `${this.transformDateString(audit.when_date)} `
+                if (audit.thing_type == 'alert' || audit.thing_type == 'entry') {
+                    if (Object.keys(audit.audit_data).length == 1 && audit.audit_data.status) {
+                        if (audit.audit_data.status == 'closed') {
+                            finalDisplay += `<b>${audit.username}</b> closed ${audit.thing_type} ${audit.thing_id}`
+                        }
+                        if (audit.audit_data.status == 'promoted') {
+                            finalDisplay += `<b>${audit.username}</b> promoted ${audit.thing_type} ${audit.thing_id}`
+                        }
+                        if (audit.audit_data.status == 'open') {
+                            finalDisplay += `<b>${audit.username}</b> reopened ${audit.thing_type} ${audit.thing_id}`
+                        }
+                    }
+                    else {
+                        finalDisplay += `<b>${audit.username}</b> updated ${audit.thing_type} ${audit.thing_id}`
+                    }
+                }
+                else if (audit.audit_data) {
+                    for (const key in audit.audit_data) {
+                        finalDisplay += `<b>${audit.username}</b> changed ${key} to ${JSON.stringify(audit.audit_data[key])}`
+                    }
+                }
+                else {
+                    finalDisplay = ''
                 }
                 return finalDisplay
             }
@@ -111,6 +134,27 @@
                 return `${this.transformDateString(audit.when_date)} <b>${audit.username}</b> deleted ${audit.thing_type} ${audit.thing_id}`
             }
             return 'NO FORMAT'
+        }
+
+        readAuditDisplay(audits: Array<Audit>) {
+            const byUser = audits.reduce((userDict: any, audit: Audit) => {
+                if (audit.username && audit.username in userDict) {
+                    userDict[audit.username].push(audit)
+                }
+                else if (audit.username) {
+                    userDict[audit.username] = [audit]
+                }
+                return userDict
+            }, {})
+            var result = '<table>'
+            for (const user in byUser) {
+                const earliestAudit = byUser[user].at(0)
+                const latestAudit = byUser[user].at(-1)
+                result += `<tr><td class="pr-2"><b>${user}</b></td><td>Earliest: ${this.transformDateString(earliestAudit.when_date)} from IP ${earliestAudit.src_ip}</td></tr>`
+                result += `<tr><td></td><td>Latest: ${this.transformDateString(latestAudit.when_date)} from IP ${latestAudit.src_ip}</td></tr>`
+            }
+            result += '</table>'
+            return result
         }
     }
 </script>

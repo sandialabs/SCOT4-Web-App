@@ -1,10 +1,6 @@
 <template>
-    <v-chip :outlined="isChild" :ripple="false" text-color="black" :color="isChild ? 'lime-accent-2':'lime accent-1'" @click.prevent.stop="onFlairClick" v-bind:class="{'child pr-0': isChild, 'my-n1 pl-1 pr-0': !isChild}"
-        >{{computedEntityValue}}<!-- The lack of whitespace between tags here is important for spacing, don't change it
-        --><FlairComponent v-for="child in children" :key="`${child.type_name}${child.value}`" :isChild=true :entity=child
-                        :vuetify="vuetify" :addFlairedEntity="addFlairedEntity"
-                        :children=child.children>
-        </FlairComponent>
+    <v-chip :outlined="isChild" :ripple="false" text-color="black" :color="isChild ? 'lime-accent-2':'lime accent-1'" @click.prevent.stop="onFlairClick" v-bind:class="{'child pr-0': isChild, 'my-n1 pl-1 pr-0': !isChild}">
+        <slot>{{ entity.value }}</slot>
         <v-badge color="black" inline v-if="entity.entry_annotation != null" class="mr-n1">
             <template v-slot:badge>
                 <v-tooltip bottom>
@@ -32,7 +28,6 @@
                 </v-tooltip>
             </template>
         </v-badge>
-
     </v-chip>
 </template>
 
@@ -44,17 +39,11 @@ import { Action } from 'vuex-class';
 
 const namespace: string = 'IRElements';
 
-
 @Component({
-  components: {
-    
-    
-    },
+  components: {},
 })
-
 export default class FlairComponent extends Vue{
     @Prop() entity: any
-    @Prop() children: any
     @Prop({ default: false }) isChild: boolean
     @Prop() vuetify: any
     @Prop() addFlairedEntity: CallableFunction
@@ -62,7 +51,6 @@ export default class FlairComponent extends Vue{
 
     @Action('addFlairedEntity', { namespace }) addFlairedEntityGlobal: CallableFunction
     @Action('flairDialogSetToTrue', { namespace }) flairDialogSetToTrueGlobal: CallableFunction
-
 
     addFlairedEntityReal: CallableFunction
     flairDialogSetToTrueReal: CallableFunction
@@ -77,31 +65,6 @@ export default class FlairComponent extends Vue{
         const num = Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive 
         const sampleIcons = ["mdi-server", "mdi-wall", "mdi-block-helper", "mdi-microsoft-azure"]
         return sampleIcons.sort(() => .5 - Math.random()).slice(0, num)
-    }
-
-    get computedEntityValue() {
-        if (this.children != undefined && this.children.length > 0) {
-            let computedEntity = ""
-            for (const child of this.children) {
-                try {
-                    computedEntity = this.entity.value.replace(child.value, '')
-
-                }
-                catch (e) {
-                    console.log(e)
-                }
-            }
-            return computedEntity
-        }
-        else {
-            if (this.entity) {
-                return this.entity.value
-
-            }
-            else {
-                return ""
-            }
-        }
     }
 
     created() {
@@ -131,9 +94,7 @@ export default class FlairComponent extends Vue{
         await this.flairDialogSetToTrueReal()
         await this.addFlairedEntityReal({ entity: this.entity })
     }
-
 }
-
 
 
 </script>

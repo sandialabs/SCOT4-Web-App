@@ -41,6 +41,9 @@
             <v-btn @click="openClassifyModal()" :disabled="selectedEntityIds.length === 0">
                 Add Class or Tag
             </v-btn>
+            <v-btn @click="openRemoveClassifyModal()" :disabled="selectedEntityIds.length === 0">
+                Remove Class or Tag
+            </v-btn>
             <v-btn @click="openMappingModal()" v-if="hasIpAddresses()">
                 IP Geo Map
             </v-btn>
@@ -51,7 +54,10 @@
         <ClassifyEntityDialog
             v-model="isClassifyModalOpen"
             :selectedEntityIds="selectedEntityIds"
-            @submit-success="submitSuccess()"
+            :isRemove="isClassifyModalRemove"
+            :selectedEntityClasses="selectedEntityClasses"
+            :selectedEntityTags="selectedEntityTags"
+            @submit-success="submitSuccess"
         />
         <GeoMappingPane
             ref="geoMappingPane"
@@ -91,8 +97,10 @@ export default class EntitiesPane extends Vue{
     visibleEntities: Set<number> = new Set()
     populatingEntities: boolean = false
     selectedEntityIds: number[] = []
-    selectedClass: string = ''
+    selectedEntityClasses: any[] = []
+    selectedEntityTags: any[] = []
     isClassifyModalOpen: boolean = false
+    isClassifyModalRemove: boolean = false
     isMappingModalOpen:boolean = false
     
 
@@ -102,7 +110,9 @@ export default class EntitiesPane extends Vue{
 
     submitSuccess() {
         this.selectedEntityIds = [];
-        this.displayedEntities = this.selectedElementEntities;
+        this.selectedEntityClasses = []
+        this.selectedEntityTags = []
+        this.populateEntities()
     }
 
     @Watch('selectedElementEntities')
@@ -144,7 +154,7 @@ export default class EntitiesPane extends Vue{
 
     copyEntityTypeClipboard(entityType: string) {
         let textString = ""
-        const entities = this.selectedElementEntities[entityType]
+        const entities = this.displayedEntities[entityType]
         for (const entityKey of Object.keys(entities)) {
             const entity = this.selectedElementEntities[entityType][entityKey]
             textString += `${entity.value}\n`
@@ -154,7 +164,7 @@ export default class EntitiesPane extends Vue{
 
     copyAllEntitiesToClipboard() {
         let textString = ""
-        for (const [entityType, entities] of Object.entries(this.selectedElementEntities)) {
+        for (const [entityType, entities] of Object.entries(this.displayedEntities)) {
             for (const entityKey of Object.keys(entities)) {
                 const entity = this.selectedElementEntities[entityType][entityKey]
                 textString += `${entity.value}\n`
@@ -174,6 +184,20 @@ export default class EntitiesPane extends Vue{
     }
 
     openClassifyModal() {
+        this.isClassifyModalRemove = false;
+        this.isClassifyModalOpen = true;
+    }
+
+    openRemoveClassifyModal() {
+        for (const entityType in this.displayedEntities) {
+            for (const entityName in this.displayedEntities[entityType]) {
+                if (this.selectedEntityIds.includes(this.displayedEntities[entityType][entityName].id)) {
+                    this.selectedEntityClasses = [...this.selectedEntityClasses, ...this.displayedEntities[entityType][entityName].classes]
+                    this.selectedEntityTags = [...this.selectedEntityTags, ...this.displayedEntities[entityType][entityName].tags]
+                }
+            }
+        }
+        this.isClassifyModalRemove = true;
         this.isClassifyModalOpen = true;
     }
 

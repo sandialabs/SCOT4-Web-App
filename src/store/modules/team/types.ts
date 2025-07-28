@@ -9,6 +9,8 @@ export interface TeamState {
     auditEntries: Array<Audit>
     totalAuditCount: number
     gameResults: Array<any>
+    metricResults: Array<any>
+    specialMetric: Array<any>
     userActivity: any
 }
 

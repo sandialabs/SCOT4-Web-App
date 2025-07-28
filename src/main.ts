@@ -19,10 +19,12 @@ import { ValidationProvider } from 'vee-validate';
 import VModal from 'vue-js-modal'
 import VueObserveVisibility from 'vue-observe-visibility'
 import VueMeta from 'vue-meta'
+import VueWordCloud from 'vuewordcloud';
 
 Vue.use(VueObserveVisibility)
 Vue.config.productionTip = false
 Vue.component('ValidationProvider', ValidationProvider);
+Vue.component(VueWordCloud.name, VueWordCloud);
 Vue.use(VueMeta)
 Vue.use(VModal, {
   dialog: true
@@ -62,14 +64,11 @@ function interceptClickEvent(e:any) {
       const href = target.getAttribute('href');
       if (!href.startsWith('#')) {
           const url = (new URL(href))
-          e.preventDefault()
-          console.log(window.location.hostname)
-          console.log(url.hostname)
           if (window.location.hostname != url.hostname) {
+              e.preventDefault()
               const answer = window.confirm('You are navigating to an external link. Are you sure you want to proceed?')
               if (answer === true) {
                   window.open(url, '_blank')
-
               }
           }
       }

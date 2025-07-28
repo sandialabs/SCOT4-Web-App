@@ -1,7 +1,7 @@
 // profile/mutations.ts
 import { MutationTree } from 'vuex';
 import Vue from 'vue'
-import { IRElementMeta, IRElementsListState, IRElementType, NewEntry, Entry, Entity, Tag, Source, LinkedElement, IRElementStatus } from './types';
+import { IRElementMeta, IRElementsListState, IRElementType, Entry, Entity, Tag, Source, LinkedElement, IRElementStatus } from './types';
 import { findEntryTreePath, findEntry, removeEntry, addEntry } from '@/utils/treeUtils';
 import { findLinkedElementEntryTreePath, addLinkedElementEntry, findLinkedElementEntry, removeLinkedElementEntry } from '@/utils/linkedTreeUtils';
 import { convertFromSnakeCase } from '@/utils/elementUtils'
@@ -115,6 +115,10 @@ export const mutations: MutationTree<IRElementsListState> = {
                 state.SelectedElementEntities[flairIndex]["pivots"] = {} as any
                 state.SelectedElementFlairedEntities.push(state.SelectedElementEntities[flairIndex])
             }
+            else {
+                // Entity is already in the flair modal, switch to it
+                state.flairMenuEntity = state.SelectedElementEntities[flairIndex]
+            }
         }
     },
 
@@ -166,6 +170,7 @@ export const mutations: MutationTree<IRElementsListState> = {
         state.entitiesLoaded = false
         state.numEntitiesLoading += 1
     },
+
     entitiesLoaded(state, cancelled: boolean) {
         state.numEntitiesLoading -= 1
         if (state.numEntitiesLoading == 0 && !cancelled) {
@@ -210,17 +215,15 @@ export const mutations: MutationTree<IRElementsListState> = {
         if (state.SelectedElement !=null && state.SelectedElement?.ElementType == IRElementType.Signature){
             state.SelectedElement = payload.data
             const idToCheck = payload.data.id
-                if (state.SelectedElement !=null){
-                    state.SelectedElement.ElementType = payload.elementType
-                }
-                
-                if (state.ElementList != null && state.SelectedElement != null) {
-                    const elementListIndex = state.ElementList.findIndex(elementMeta => elementMeta.id == idToCheck)
-                    state.SelectedElement.elementListIndex = elementListIndex
-                }
+            if (state.SelectedElement !=null){
+                state.SelectedElement.ElementType = payload.elementType
+            }
             
+            if (state.ElementList != null && state.SelectedElement != null) {
+                const elementListIndex = state.ElementList.findIndex(elementMeta => elementMeta.id == idToCheck)
+                state.SelectedElement.elementListIndex = elementListIndex
+            }
         }
-       
     },
 
     setSelectedAlertIds(state, payload: any) {
@@ -232,8 +235,7 @@ export const mutations: MutationTree<IRElementsListState> = {
     removeFlairedEntity(state, payload:any){
         const index:number = state.SelectedElementFlairedEntities.findIndex((entity:any) => entity.id == payload.id)
         state.SelectedElementFlairedEntities.splice(index,1)
-        if (state.SelectedElementFlairedEntities.length == 0)
-        {
+        if (state.SelectedElementFlairedEntities.length == 0) {
             state.flairDialog = false
         }
     },
@@ -274,8 +276,9 @@ export const mutations: MutationTree<IRElementsListState> = {
                 return
             }
             else {
-                for (const childEntry of childrenEntries)
+                for (const childEntry of childrenEntries) {
                     findChildren(childEntry, allEntries)
+                }
             }
         }
         const parentEntries = payload.data.result.filter((entry: Entry) => entry.parent_entry_id == null)
@@ -451,11 +454,9 @@ export const mutations: MutationTree<IRElementsListState> = {
 
             if (payload.entry_data) {
                 Vue.set(entry, "entry_data", payload.entry_data)
-
             }
             else {
                 Vue.set(entry, "entry_data", entry.entry_data)
-
             }
 
             Vue.set(entry, "editMode", false)
@@ -465,11 +466,9 @@ export const mutations: MutationTree<IRElementsListState> = {
             const entry = findLinkedElementEntry(payload.treePath, state, entryId, payload.linkedElementType, payload.linkedElementIndex)
             if (payload.entry_data != null) {
                 Vue.set(entry, "entry_data", payload.entry_data)
-
             }
             Vue.set(entry, "editMode", false)
         }
-
     },
 
     updateSelectedElementAlertStatus(state, payload: any) {
@@ -529,13 +528,10 @@ export const mutations: MutationTree<IRElementsListState> = {
                             Vue.set(state.ElementList[state.SelectedElement.elementListIndex], newStatusCountPropName, newStatusCount + 1)
                             Vue.set(state.ElementList[state.SelectedElement.elementListIndex], oldStatusCountPropName, oldStatusCount - 1)
                         }
-
                     }
                 }
             }
-
         }
-
     },
 
     promoteElementsSuccess(state, { promotedIds, promotedType, newObject }) {
@@ -576,8 +572,8 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
 
     },
-    changeEntryToLoading(state, payload: any) {
 
+    changeEntryToLoading(state, payload: any) {
         if (payload.linkedElementId == null && payload.linkedElementIndex == null && payload.linkedElementType == null) {
             const entryId: number = payload.entryId
             const entry = findEntry(payload.treePath, state, entryId)
@@ -586,15 +582,13 @@ export const mutations: MutationTree<IRElementsListState> = {
             }
             entry['editMode'] = 'loading'
         }
-
         else {
             const entryId: number = payload.entryId
             const entry = findLinkedElementEntry(payload.treePath, state, entryId, payload.linkedElementType, payload.linkedElementIndex)
             entry['editMode'] = 'loading'
-
         }
-
     },
+
     addNewEntryWithEditModeOn(state, payload: any) {
         if (payload.linkedElementId == null && payload.linkedElementIndex == null && payload.linkedElementType == null) {
             const entryData = ""
@@ -703,6 +697,28 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
     },
 
+    deleteSourceSuccess(state, payload: any) {
+        if (state.SelectedElement) {
+            const selectedElementSources = state.SelectedElement.sources?.indexOf(payload)
+            if (selectedElementSources) {
+                state.SelectedElement.autoCompleteSources?.splice(selectedElementSources, 1)
+                Vue.set(state.SelectedElement, "autoCompleteSources", state.SelectedElement.autoCompleteSources)
+            }
+        }
+    },
+
+    replaceSourceSuccess(state, {old_id, payload}) {
+        if (state.SelectedElement) {
+            const deletedElementSources = state.SelectedElement.sources?.findIndex(a => a.id == old_id)
+            if (deletedElementSources) {
+                state.SelectedElement.autoCompleteTags?.splice(deletedElementSources, 1)
+                Vue.set(state.SelectedElement, "autoCompleteSources", state.SelectedElement.autoCompleteTags)
+            }
+            const selectedElementSources = state.SelectedElement.sources?.map((x: Tag) => x.name)
+            Vue.set(state.SelectedElement, "autoCompleteSources", payload.result.map((x: Tag) => x.name).filter((x: string) => !selectedElementSources?.includes(x)))
+        }
+    },
+
     retrieveTagsSuccess(state, payload: any) {
         if (state.SelectedElement) {
             const selectedElementTags = state.SelectedElement.tags?.map((x: Tag) => x.name)
@@ -710,6 +726,27 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
     },
 
+    deleteTagSuccess(state, payload: Tag) {
+        if (state.SelectedElement) {
+            const selectedElementTags = state.SelectedElement.tags?.indexOf(payload)
+            if (selectedElementTags) {
+                state.SelectedElement.autoCompleteTags?.splice(selectedElementTags, 1)
+                Vue.set(state.SelectedElement, "autoCompleteTags", state.SelectedElement.autoCompleteTags)
+            }
+        }
+    },
+
+    replaceTagSuccess(state, {old_id, payload}) {
+        if (state.SelectedElement) {
+            const deletedElementTags = state.SelectedElement.tags?.findIndex(a => a.id == old_id)
+            if (deletedElementTags) {
+                state.SelectedElement.autoCompleteTags?.splice(deletedElementTags, 1)
+                Vue.set(state.SelectedElement, "autoCompleteTags", state.SelectedElement.autoCompleteTags)
+            }
+            const selectedElementTags = state.SelectedElement.tags?.map((x: Tag) => x.name)
+            Vue.set(state.SelectedElement, "autoCompleteTags", payload.result.map((x: Tag) => x.name).filter((x: string) => !selectedElementTags?.includes(x)))
+        }
+    },
 
     retrieveEntityAppearancesSuccess(state, payload:any){
         if (state.SelectedElement){
@@ -743,6 +780,16 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
     },
 
+    addEntityTagSuccess(state, payload:any){
+        const entityIndex = state.SelectedElementEntities.findIndex((el: any) => el.id == payload.id)
+        if (entityIndex != -1) {
+            Vue.set(state.SelectedElementEntities[entityIndex], "tags", payload["tags"])
+        }
+        else if (state.SelectedElement?.ElementType == IRElementType.Entity && payload.id == state.SelectedElement.id) {
+            Vue.set(state.SelectedElement, "tags", payload["tags"])
+        }
+    },
+
     removeEntityClassesSuccess(state, payload:any){
         const entityIndex = state.SelectedElementEntities.findIndex((el: any) => el.id == payload.id)
         if (entityIndex != -1) {
@@ -750,6 +797,16 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
         else if (state.SelectedElement?.ElementType == IRElementType.Entity && payload.id == state.SelectedElement.id) {
             Vue.set(state.SelectedElement, "classes", payload["classes"])
+        }
+    },
+
+    removeEntityTagSuccess(state, payload:any){
+        const entityIndex = state.SelectedElementEntities.findIndex((el: any) => el.id == payload.id)
+        if (entityIndex != -1) {
+            Vue.set(state.SelectedElementEntities[entityIndex], "tags", payload["tags"])
+        }
+        else if (state.SelectedElement?.ElementType == IRElementType.Entity && payload.id == state.SelectedElement.id) {
+            Vue.set(state.SelectedElement, "tags", payload["tags"])
         }
     },
 
@@ -761,10 +818,10 @@ export const mutations: MutationTree<IRElementsListState> = {
 
     updateEntityClassDescriptionSuccess(state, payload:any){
         if (state.SelectedElement && state.SelectedElement.classes){
-                const indexToChange = state.SelectedElement.classes.map((e:any) => {return e.id}).indexOf(payload.id)
-                if (indexToChange != -1){
-                    Vue.set(state.SelectedElement.classes, indexToChange, payload)
-                }
+            const indexToChange = state.SelectedElement.classes.map((e:any) => {return e.id}).indexOf(payload.id)
+            if (indexToChange != -1){
+                Vue.set(state.SelectedElement.classes, indexToChange, payload)
+            }
         }
     },
    
@@ -773,7 +830,6 @@ export const mutations: MutationTree<IRElementsListState> = {
             state.SelectedElementFlairedEntities = []
         }
         state.flairDialog = value
-
     },
 
     addTagOrSourceSuccess(state, payload: any) {
@@ -824,17 +880,21 @@ export const mutations: MutationTree<IRElementsListState> = {
         }
     },
 
-    updateTagOrSourceDescriptionSuccess(state, payload: any) {
+    updateTagOrSourceSuccess(state, payload: any) {
         if (state.SelectedElement != null && state.SelectedElement != undefined && state.SelectedElement.tags && state.SelectedElement.sources) {
-
             if (payload.type == "tag") {
                 const tagIndexToChange = state.SelectedElement.tags.findIndex(tag => tag.id === payload.id)
-
                 Vue.set(state.SelectedElement.tags[tagIndexToChange], "description", payload.description)
+                if (state.SelectedElement.tags[tagIndexToChange] !== payload.name) {
+                    Vue.set(state.SelectedElement.tags[tagIndexToChange], "name", payload.name)
+                }
             }
             else {
                 const sourceIndexToChange = state.SelectedElement.sources.findIndex(source => source.id === payload.id)
                 Vue.set(state.SelectedElement.sources[sourceIndexToChange], "description", payload.description)
+                if (state.SelectedElement.sources[sourceIndexToChange] !== payload.name) {
+                    Vue.set(state.SelectedElement.sources[sourceIndexToChange], "name", payload.name)
+                }
             }
         }
     },
@@ -952,7 +1012,6 @@ export const mutations: MutationTree<IRElementsListState> = {
                 for (const childEntry of childrenEntries)
                     return findChildren(childEntry, allEntries)
             }
-
         }
         const parentEntries = payload.data.result.filter((entry: Entry) => entry.parent_entry_id == null)
         for (const parentEntry of parentEntries) {

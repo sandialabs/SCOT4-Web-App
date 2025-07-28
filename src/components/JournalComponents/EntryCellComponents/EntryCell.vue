@@ -23,7 +23,7 @@
                     :entryType="childEntry.entry_class"
                     :key=childEntry.id
                     @permissions-click="$emit('permissions-click', childEntry)"
-                    @entry-entities-click="$emit('entry-entities-click', childEntry)">
+                    @entry-entities-click="$emit('entry-entities-click', $event)">
             </EntryCell>
         </v-container>
     </v-container>

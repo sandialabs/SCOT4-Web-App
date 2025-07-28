@@ -67,7 +67,7 @@
                     Signature:&nbsp;<a :href="sigSelected.data.search_link">{{sigSelected.name}}</a>
                 </v-card-title>
                 <v-card-title v-else>
-                    Signature Name: {{sigSelected.name}}
+                    Signature Name:&nbsp;<router-link :to="'/signatures/' + sigSelected.id.toString()">{{sigSelected.name}}</router-link>
                 </v-card-title>
                 <v-card-subtitle>
                     Signature Type: {{sigSelected.type}}
@@ -78,16 +78,15 @@
                 <v-list>
                     <v-subheader>Signature Attributes</v-subheader>
                     <v-divider />
-                    <v-list-item-group>
-                        <v-list-item v-for="(val, propName) in sigSelected.data" :key=propName>
-                            <v-list-item-content>
-                                <v-list-item-title>
-                                    <b>{{propName}}</b>
-                                </v-list-item-title>
-                                {{val}}
-                            </v-list-item-content>
-                        </v-list-item>
-                    </v-list-item-group>
+                    <v-list-item v-for="(val, propName) in sigSelected.data" :key=propName>
+                        <v-list-item-content>
+                            <v-list-item-title>
+                                <b>{{propName}}</b>
+                            </v-list-item-title>
+                            <span v-if="propName == 'signature_body'" style="white-space: pre-line;">{{val}}</span>
+                            <span v-else>{{val}}</span>
+                        </v-list-item-content>
+                    </v-list-item>
                 </v-list>
                 <v-card-actions>
                     Signature Owner: {{sigSelected.owner}}

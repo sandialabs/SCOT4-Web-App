@@ -171,7 +171,6 @@ export const actions: ActionTree<UserState, RootState> = {
                 // If we're reconnecting, also retreive item list and selected element again after we connect
                 if (reconnect) {
                     firehose.onopen = async () => {
-                        console.log("Reconnected to firehose")
                         if (rootGetters['IRElements/elementType']) {
                             await store.dispatch('IRElements/retrieveElementListWithFilter', { 'elementType': rootGetters['IRElements/elementType'], 'filterDict': rootGetters['IRElements/elementListFilterDict'] })
                         }
@@ -187,10 +186,21 @@ export const actions: ActionTree<UserState, RootState> = {
             commit('errorOccurred', e, {root:true})
         }
     },
-    
-    async handleFirehoseEvent({ commit }, { firehoseEvent, user, selectedElement, selectedElementEntryIds, selectedElementFiles, queueElementType, elementListFilterDict }) {
+
+    async handleFirehoseEvent({ commit, state }, { firehoseEvent, user, selectedElement, selectedElementEntryIds, selectedElementFiles, queueElementType, elementListFilterDict }) {
+        const eventString = firehoseEvent.what + "|" + firehoseEvent.element_type + "|" + firehoseEvent.element_id
+        // Abort early if we are already processing a similar firehose event
+        if (state.firehoseRequestsInProgress.includes(eventString)) {
+            return
+        }
+        state.firehoseRequestsInProgress.push(eventString)
         // Short random delay to ease instantaneous load on the API
-        await new Promise(r => setTimeout(r, Math.random() * 1000))
+        await new Promise(r => setTimeout(r, 500 + Math.random() * 2500))
+        // Remove from list before processing starts since processing has multiple steps. Maybe move to finally clause later?
+        const eventStringIdx = state.firehoseRequestsInProgress.findIndex((e) => e == eventString)
+        if (eventStringIdx != -1) {
+            state.firehoseRequestsInProgress.splice(eventStringIdx, 1)
+        }
         try {
             if (firehoseEvent.what == "create" || firehoseEvent.what == "delete" || firehoseEvent.what == "update") {
                 // Pull notifications for this user
@@ -288,6 +298,28 @@ export const actions: ActionTree<UserState, RootState> = {
                 else if (firehoseEvent.element_type == 'file' && selectedElementFiles.map((a: any) => a.id).includes(firehoseEvent.element_id)) {
                     await store.dispatch('IRElements/retrieveSelectedElementFilesbyID', { 'elementID': selectedElement.id, 'elementType': queueElementType })
                 }
+                else if (firehoseEvent.element_type == 'enrichment') {
+                    try {
+                        // make sure this entity is among the selected Entities (it's actively open in the flair pane)
+                        const selectedElementEntityIds = store.getters['IRElements/selectedElementFlairedEntities'].map((e: Entity) => e.id)
+                        if (selectedElementEntityIds.includes(firehoseEvent.entity_id)) {
+                            // get the enrichment's entity/id
+                            const resp = await Vue.prototype.$api.elements.retrieveElementbyID(firehoseEvent.entity_id, IRElementType.Entity)
+                            const entity = resp.data
+                            const entity_id = entity.id
+                            // if in pane, pull all of the entity's enrichments
+                            const respEntityEnrichment = await Vue.prototype.$api.elements.retrieveEntityEnrichmentsbyID(entity_id)
+                            const enrichments = respEntityEnrichment.data
+                            entity.enrichments = enrichments
+                            // then try calling the action resetFlairedEnrichmentPivotValue, then addFlairedEntitySuccess to see if that triggers a refresh in the UI (appropriately)
+                            await store.dispatch('IRElements/resetFlairedEnrichmentsAndPivotsValue')
+                            await store.dispatch('IRElements/addFlairedEntity', {entity:entity})
+                        }
+                    }
+                    catch (e: any) {
+                        commit('errorOccurred', e, { root: true })
+                    }
+                }
                 // Monitor entities linked to the selected element
                 else if (firehoseEvent.element_type == 'entity') {
                     const selectedElementEntityIds = store.getters['IRElements/selectedElementEntitiesArray'].map((e: Entity) => e.id)
@@ -325,7 +357,7 @@ export const actions: ActionTree<UserState, RootState> = {
             }
         }
         catch(e){
-            commit('errorOccurred', e, {root: true})
+            console.log("Error in firehose request", e)
         }
     },
 
@@ -373,15 +405,16 @@ export const actions: ActionTree<UserState, RootState> = {
         }
     },
 
-    async searchText({ commit }, {searchText}) {
+    async performTextSearch({ commit, state }, { searchText, extraFilters = {}, sort = undefined }) {
         try {
-            const resp = await Vue.prototype.$api.user.callTextSearch(searchText)
-            commit('userSearchSuccess', { "data": resp.data})
+            const resp = await Vue.prototype.$api.user.callTextSearch(searchText, extraFilters, sort)
+            state.searchText = searchText
+            commit('userSearchSuccess', { "data": resp.data })
         }
         catch (e: any) {
-                commit('errorOccurred', e, { root: true })
-    }
-},
+            commit('errorOccurred', e, { root: true })
+        }
+    },
 
     async clearSearchResults({ commit }) {
         try {

@@ -22,6 +22,8 @@ export const state: TeamState = {
     auditEntries: [],
     totalAuditCount: 0,
     gameResults: [],
+    metricResults: [],
+    specialMetric: [],
     userActivity: {},
 };
 

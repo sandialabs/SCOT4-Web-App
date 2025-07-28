@@ -35,7 +35,7 @@ export default class FlairedTextComponent extends Vue{
         }
     }
 
-    parseNode(node: Node, h: CallableFunction): any {
+    parseNode(node: Node, h: CallableFunction, isFlairChild: boolean = false): any {
         if (node.nodeType == node.TEXT_NODE) {
             return node.textContent
         }
@@ -49,9 +49,10 @@ export default class FlairedTextComponent extends Vue{
             }
             // Need to replace slashes and quotes in attribute names for compatibility with some old SCOT data
             const nodeAttributes: any = Array.from((node as Element).attributes).reduce((obj, val) => ({ ...obj, [val.nodeName.replace('"', '').replace('\\', '')]: val.nodeValue }), {})
-            const children = Array.from(node.childNodes).map((n) => this.parseNode(n, h))
+            const isEntitySpan = this.entitiesLoaded && nodeName.toUpperCase() == "SPAN" && nodeAttributes.class?.replace('\\"', '').startsWith("entity")
+            const children = Array.from(node.childNodes).map((n) => this.parseNode(n, h, isFlairChild || isEntitySpan))
             // Special handling of flair
-            if (this.entitiesLoaded && nodeName.toUpperCase() == "SPAN" && nodeAttributes.class?.replace('\\"', '').startsWith("entity")) {
+            if (isEntitySpan) {
                 let nodeType = nodeAttributes["data-entity-type"]
                 let nodeValue = nodeAttributes["data-entity-value"]?.toLowerCase()
                 // Also remove slashes and quotes if necessary for compatibility with old SCOT data
@@ -60,25 +61,15 @@ export default class FlairedTextComponent extends Vue{
                     nodeType = nodeType.replaceAll('\\"', '')
                     nodeValue = nodeValue.replaceAll('\\"', '')
                 }
-                const flairChildren = []
-                for (const elem of children) {
-                    if (!elem.type && elem.tag?.includes("FlairComponent")) {
-                        const childValue = elem.data.props.entity.value
-                        const childType = elem.data.props.entity.type_name
-                        if (childType in this.selectedElementEntities && childValue in this.selectedElementEntities[childType]) {
-                            flairChildren.push(this.selectedElementEntities[childType][childValue])
-                        }
-                    }
-                }
                 if (!(nodeType in this.selectedElementEntities) || !this.selectedElementEntities[nodeType][nodeValue]) {
                     return h(nodeName, { attrs: nodeAttributes }, children)
                 }
                 const entity = this.selectedElementEntities[nodeType][nodeValue]
                 const flairComponentProps = {
                     entity: entity,
-                    children: flairChildren,
+                    isChild: isFlairChild
                 }
-                return h(FlairComponent, { props: flairComponentProps })
+                return h(FlairComponent, { props: flairComponentProps }, children)
             }
             return h(nodeName, { attrs: nodeAttributes }, children)
         }

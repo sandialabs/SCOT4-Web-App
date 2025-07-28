@@ -15,11 +15,11 @@
         </v-chip>
         <NewEntityMenu v-if="selectedText" :buttonVisible="textSelected" :entityText="selectedText" :entryId="entryId" />
         <v-spacer></v-spacer>
-        <v-btn class="py-1 px-1" icon @click="subscribeItem" v-bind="attrs" v-on="on" title="Subscribe to notifications for this entry">
+        <v-btn class="py-1 px-1" icon @click="subscribeItem" title="Subscribe to notifications for this entry">
             <v-icon v-if="entryById(entryId, treePath, linkedElementId, linkedElementIndex, linkedElementType).subscribed" color="blue">mdi-bell</v-icon>
             <v-icon v-else color="blue">mdi-bell-outline</v-icon>
         </v-btn>
-        <v-btn class="py-1 px-1" icon @click="favoriteItem" v-bind="attrs" v-on="on" title="Favorite this entry">
+        <v-btn class="py-1 px-1" icon @click="favoriteItem" title="Favorite this entry">
             <v-icon v-if="entryById(entryId, treePath, linkedElementId, linkedElementIndex, linkedElementType).favorite" :color="entryClass == 'task' && entryData.status != 'closed' ? 'black' : 'red'">mdi-heart</v-icon>
             <v-icon v-else :color="entryClass == 'task' && entryData.status != 'closed' ? 'black' : 'red'">mdi-heart-outline</v-icon>
         </v-btn>

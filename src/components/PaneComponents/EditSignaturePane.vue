@@ -1,26 +1,39 @@
 <template>
     <v-card :loading="loading">
         <v-list v-if="sigSelected != null">
-            <v-list-item >
-                <v-text-field label="Signature Type" @blur="updateSignatureField('type')" v-model="sigSelected.type"></v-text-field>
+            <v-list-item dense v-ripple="false" class="pt-2">
+                <v-text-field dense label="Signature Type" @blur="updateSignatureField('type')" v-model="sigSelected.type"></v-text-field>
             </v-list-item>
-            <v-list-item>
-                <v-text-field label="Signature Description" @blur="updateSignatureField('description')" v-model="sigSelected.description"></v-text-field>
+            <v-list-item dense v-ripple="false">
+                <v-list-item-content>
+                    <v-text-field dense label="Signature Description" @blur="updateSignatureField('description')" v-model="sigSelected.description"></v-text-field>
+                </v-list-item-content>
             </v-list-item>
-            <v-list-item dense v-ripple="false" v-if="sigSelected.type != 'splunk' && sigSelected.data">
-                <v-list-item-content class="" style="min-width: 23em">
-                    <v-text-field class="mr-6 flex-shrink-0 flex-grow-0" @blur="updateSignatureField('data')" label="Reference Type" style="width: 45%" hint="The SCOT datatype that orignated this signature" v-model="sigSelected.data.target.type" dense></v-text-field>
+            <v-list-item dense v-ripple="false" v-if="sigSelected.data.external_location != null">
+                <v-text-field dense readonly label="External Location" @blur="updateSignatureField('data')" v-model="sigSelected.data.external_location" hint="The external location where this signature is stored (blank if only stored in SCOT)">
+                    <template v-slot:append>
+                        <a :href="sigSelected.data.external_location" target="_blank">
+                            <v-icon v-if="sigSelected.data.external_location">
+                                mdi-open-in-new
+                            </v-icon>
+                        </a>
+                    </template>
+                </v-text-field>
+            </v-list-item>
+            <v-list-item dense v-ripple="false" v-if="sigSelected.type != 'splunk' && sigSelected.data?.target">
+                <v-list-item-content style="min-width: 23em">
+                    <v-text-field class="mr-6 mb-0 flex-shrink-0 flex-grow-0" @blur="updateSignatureField('data')" label="Reference Type" style="width: 45%" hint="The SCOT datatype that orignated this signature" v-model="sigSelected.data.target.type" dense></v-text-field>
                     <v-text-field class="mr-6 flex-shrink-0 flex-grow-0" @blur="updateSignatureField('data')" label="Reference ID" style="width: 45%" hint="The id of the SCOT datatype that originated this signature" v-model="sigSelected.data.target.id" dense></v-text-field>
                 </v-list-item-content>
             </v-list-item>
             <v-list-item dense v-ripple="false" v-if="sigSelected.type != 'splunk' && sigSelected.data" class="mt-n2">
                 <v-list-item-content>
-                    <v-combobox v-model="sigSelected.data.signature_group" @blur="updateSignatureField('data')" label="Signature Groups" hint="Group signatures under common names" multiple chips deletable-chips></v-combobox>
+                    <v-combobox dense v-model="sigSelected.data.signature_group" @blur="updateSignatureField('data')" label="Signature Groups" hint="Group signatures under common names" multiple chips deletable-chips></v-combobox>
                 </v-list-item-content>
             </v-list-item>
             <v-list-item dense v-ripple="false" v-if="sigSelected.type != 'splunk' && sigSelected.data" class="mt-n2">
                 <v-list-item-content>
-                    <v-select v-model="sigSelected.data.action" @blur="updateSignatureField('data')" :items="actionItems" label="Action" hint="The automated action that should take place when this signature is triggered" chips multiple></v-select>
+                    <v-select dense v-model="sigSelected.data.action" @blur="updateSignatureField('data')" :items="actionItems" label="Action" hint="The automated action that should take place when this signature is triggered" chips multiple></v-select>
                 </v-list-item-content>
             </v-list-item>
         </v-list>

@@ -272,6 +272,8 @@ import ThreatActorInternalIconBlue from "@/components/EntityClassComponents/Cybe
 import ThreatActorIconRed from "@/components/EntityClassComponents/CyberIconComponents/ThreatActorIconRed.vue"
 import ThreatActorInternalIconRed from "@/components/EntityClassComponents/CyberIconComponents/ThreatActorInternalIconRed.vue"
 import KEVIcon from "@/components/EntityClassComponents/CyberIconComponents/KEVIcon.vue"
+import OrbIcon from "@/components/EntityClassComponents/CyberIconComponents/OrbIcon.vue"
+import OrbPurpleIcon from "@/components/EntityClassComponents/CyberIconComponents/OrbPurpleIcon.vue"
 
 Vue.use(Vuetify);
 
@@ -314,6 +316,12 @@ export default new Vuetify({
     },
     kev: {
       component: KEVIcon
+    },
+    orb: {
+        component: OrbIcon
+    },
+    orb_purple: {
+        component: OrbPurpleIcon
     },
   gm_flag: {
     component: GM

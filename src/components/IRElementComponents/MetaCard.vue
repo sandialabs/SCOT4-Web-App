@@ -284,7 +284,7 @@
                                         {{ entityClass.icon }}
                                     </v-icon>
                                     <v-spacer />
-                                    {{ entityClass.name }}
+                                    {{ entityClass.display_name }}
                                 </v-chip>
                             </template>
                             <span> {{ entityClass.description }} </span>
@@ -334,15 +334,17 @@
                     <v-dialog v-model="promotionDialog" max-width="600px">
                         <v-card>
                             <v-card-title>
-                                <span class="text-p">Promote to Existing Event</span>
+                                <span class="text-p">Promote to Existing</span>
                             </v-card-title>
                             <v-card-text>
                                 <v-container>
                                     <v-text-field
-                                    label="Event Id to Promote To"
-                                    v-model="eventToPromoteTo"
+                                    label="ID to Promote To"
+                                    v-model="promoteToId"
                                     type="number"
                                     required
+                                    autofocus
+                                    @keydown.enter="promoteToExisting($event, promoteToId, selectedElement?.ElementType)"
                                     >
                                     </v-text-field>
                                 </v-container>
@@ -359,7 +361,7 @@
                                 <v-btn
                                     color="blue darken-1"
                                     text
-                                    @click="function(e) {promoteToExisting(e, eventToPromoteTo)}"
+                                    @click="promoteToExisting($event, promoteToId, selectedElement?.ElementType)"
                                     :loading="promotionDialogLoading"
                                 >
                                     Submit
@@ -368,7 +370,7 @@
                         </v-card>
                     </v-dialog>
 
-                    <v-dialog v-model="fileDialog" max-width="600px">
+                    <v-dialog v-model="fileDialog" max-width="600px" @click:outside="setFileDialogVisible(false)">
                         <v-card>
                             <v-card-title class="text-h5">Upload File</v-card-title>
                             <v-card-text>
@@ -465,7 +467,7 @@
         @Mutation('toggleFlair', { namespace }) toggleFlair: CallableFunction;
         @Mutation('setSelectedAlertIds', { namespace }) setSelectedAlertIds: CallableFunction;
         @Mutation('setFileDialogVisible', { namespace }) setFileDialogVisible: CallableFunction;
-        @Getter('selectedElementAlertIds', { namespace }) selectedElementAlertIds: Array<string> | null;
+        @Getter('selectedElementAlertIds', { namespace }) selectedElementAlertIds: Array<number> | null;
         @Getter('autoCompleteEntityClasses', { namespace }) autoCompleteEntityClasses: Array<any> | undefined;
         @Getter('currentUser', { 'namespace': 'user' }) currentUser: User;
         @Getter('selectedElement', { namespace }) selectedElement: IRElement | null;
@@ -483,8 +485,8 @@
         @Action('getSignatureStatRankingbyID', { namespace }) getSignatureStatRankingbyID: CallableFunction
         @Action('modifySelectedAlertStatus', { namespace }) modifySelectedAlertStatus: CallableFunction;
         @Action('promoteSelectedAlerts', { namespace }) promoteSelectedAlerts: CallableFunction;
-        @Action('promoteSelectedAlertsToExisting', { namespace }) promoteSelectedAlertsToExisting: CallableFunction;
         @Action('promoteElements', { namespace }) promoteElements: CallableFunction;
+        @Action('promoteSelectedToExisting', { namespace }) promoteSelectedToExisting: CallableFunction;
         @Action('retrieveSources', { namespace }) retrieveSources: CallableFunction;
         @Action('retrieveTags', { namespace }) retrieveTags: CallableFunction;
         @Action('submitTagsOrSources', { namespace }) submitTagsOrSources: CallableFunction;
@@ -632,6 +634,7 @@
                 ]},
                 { "text": "Promote", "onClick": this.promoteItem, "args": [], "icon": "mdi-bullhorn-outline", "cssClass": "amber", "subActions": [
                     { "text": "Promote and Copy Tags", "onClick": this.promoteItem, args: [true] },
+                    { "text": "Promote To Existing", "onClick": this.changeDialogToTrue, "cssClass": "purple", "args": [] }
                 ]},
                 { "text": "Delete", "onClick": this.deleteItem, "args": [], "icon": "mdi-delete-outline", "cssClass": "red" }],
             [IRElementType.Intel]: [
@@ -830,7 +833,7 @@
         tagsDialog: boolean = false
         promotionDialog: boolean = false
         promotionDialogLoading: boolean = false
-        eventToPromoteTo: number | null = null
+        promoteToId: number | null = null
         permissionsDialog: boolean = false
         historyDialog: boolean = false
         historyDialogTypes: Array<string> = ['read']
@@ -1172,6 +1175,10 @@
             }
         }
 
+        async beforeDestroy() {
+            document.removeEventListener("keydown", this.handleKeyboardShortcuts)
+        }
+
         mounted() {
             this.refreshTags()
             this.refreshSources()
@@ -1180,6 +1187,7 @@
             this.updatePopularityRangeSelector()
             this.setFavoriteIcons()
             this.setSubscribeIcons()
+            document.addEventListener('keydown', this.handleKeyboardShortcuts)
         }
 
         updated() {
@@ -1323,16 +1331,20 @@
             }
         }
 
-        async promoteToExisting(e: any, eventId: number, propagateSourcesTags: boolean = false) {
+        async promoteToExisting(e: any, promoteId: number, elementType: IRElementType, propagateSourcesTags: boolean = false) {
             this.promotionDialogLoading = true
+            let selectedIds = [this.selectedElement?.id]
             if (this.selectedElementAlertIds && this.selectedElementAlertIds.length > 0) {
-                await this.promoteSelectedAlertsToExisting({
-                    selectedAlertIds: this.selectedElementAlertIds,
-                    existingEventId: eventId,
-                    newTags: propagateSourcesTags ? this.selectedElement?.tags?.map(t => t.name) : undefined,
-                    newSources: propagateSourcesTags ? this.selectedElement?.sources?.map(t => t.name) : undefined,
-                })
+                selectedIds = this.selectedElementAlertIds
+                elementType = IRElementType.Alert
             }
+            await this.promoteSelectedToExisting({
+                selectedIds: selectedIds,
+                elementType: elementType,
+                existingEventId: promoteId,
+                newTags: propagateSourcesTags ? this.selectedElement?.tags?.map(t => t.name) : undefined,
+                newSources: propagateSourcesTags ? this.selectedElement?.sources?.map(t => t.name) : undefined,
+            })
             this.promotionDialogLoading = false
             this.promotionDialog = false
         }
@@ -1403,6 +1415,21 @@
                     elementType: this.selectedElement?.ElementType,
                     updateData: updateData
                 })
+            }
+        }
+
+        async handleKeyboardShortcuts(e: KeyboardEvent) {
+            //only run for elements that have the status property
+            if(Object.prototype.hasOwnProperty.call(this.selectedElement, "status")) {
+                // Check for event target so this doesn't fire if someone's typing in a text box or something
+                if (e.target && (e.target as HTMLElement).tagName == 'BODY' && !(e.metaKey || e.altKey || e.ctrlKey)) {
+                    if (e.key == 'c' && this.selectedElement?.status == IRElementStatus.Open) {
+                        await this.statusSelectChanged(IRElementStatus.Closed)
+                    }
+                    if (e.key == 'o' && this.selectedElement?.status == IRElementStatus.Closed) {
+                        await this.statusSelectChanged(IRElementStatus.Open)
+                    }
+                }
             }
         }
 

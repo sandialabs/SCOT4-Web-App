@@ -1,7 +1,7 @@
 ﻿<template>
     <splitpanes @resized="onResize" class="default-theme" horizontal>
         <pane :size="queueTablePaneSize">
-            <modal @closed="onFlairModalClosed()" :minHeight="350" :minWidth="500" width="40%" :height="$vuetify.breakpoint.xlOnly ? '600px':'500px'" class="flairModal" classes="flairModalDialog" resizable adaptive draggable=".windowHeader" :shiftX=.5 :shiftY=1 name="flairModal">
+            <modal @closed="onFlairModalClosed()" :minHeight="350" :minWidth="500" width="40%" :height="$vuetify.breakpoint.xlOnly ? '700px':'500px'" class="flairModal" classes="flairModalDialog" resizable adaptive draggable=".windowHeader" :shiftX=.5 :shiftY=1 name="flairModal">
                 <v-card flat class="flex-column-noscroll">
                     <v-row dense class="windowHeader black align-center flex-grow-0">
                         <v-col>
@@ -89,7 +89,7 @@
                                     </fieldset>
                                 </v-row>
                             </v-card>
-                            <FlairPane :key="entity.id" :entity="entity" style="max-height: 50%;" :class="$vuetify.theme.dark ? 'blue-grey darken-4 mb-2' : 'purple lighten-5 mb-2'"></FlairPane>
+                            <FlairPane :key="entity.id" :entity="entity" style="max-height: 60%;" :class="$vuetify.theme.dark ? 'blue-grey darken-4 mb-2' : 'purple lighten-5 mb-2'"></FlairPane>
                             <v-card :class="{ lightModeBackground: !$vuetify.theme.dark, darkModeBackground: $vuetify.theme.dark, 'scroll-child': true }">
                                 <v-btn dense small @click="addNewEntityEntry(entity.id)">Add Entry</v-btn>
                                 <Journal :linkedElementType="'Entity'" :linkedElementId="entity.id" :linkedElementIndex="selectedElementEntityIndex(entity.id)" dense></Journal>
@@ -153,6 +153,7 @@ export default class ResponseView extends Vue {
     @Mutation('setElementListSortDesc', { namespace }) setElementListSortDesc: CallableFunction;
     @Mutation('clearElementListFilter', { namespace }) clearElementListFilter: CallableFunction;
     @Mutation('toggleFlair', { namespace }) toggleFlair: CallableFunction;
+    @Mutation('setFlairMenuEntity', { namespace }) setFlairMenuEntity: CallableFunction;
 
     @Getter('elementType', { namespace }) elementType: IRElementType | null;
     @Getter('elementTypePluralized', { namespace }) elementTypePluralized: string | null;
@@ -173,6 +174,7 @@ export default class ResponseView extends Vue {
     @Getter('flairDialog', { namespace }) flairDialog: boolean
     @Action('flairDialogSetToTrue', { namespace }) flairDialogSetToTrue: CallableFunction;
     @Action('flairDialogSetToFalse', { namespace }) flairDialogSetToFalse: CallableFunction;
+    @Getter('flairMenuEntity', { namespace }) flairMenuEntity: any | null;
     @Getter('selectedElementPaneSize', { namespace }) selectedElementPaneSize: number;
     @Getter('queueTablePaneSize', { namespace }) queueTablePaneSize: number;
     @Action('setSelectedElementSize', { namespace }) setSelectedElementSize: CallableFunction;
@@ -370,6 +372,15 @@ export default class ResponseView extends Vue {
         }
     }
 
+    @Watch('flairMenuEntity')
+    flairClickEntityChanged(newVal: any, oldVal: any) {
+        if (newVal) {
+            const flairModalIdx = this.selectedElementFlairedEntities.findIndex((el: any) => el.id == newVal.id)
+            this.tab = flairModalIdx
+            this.setFlairMenuEntity(null)
+        }
+    }
+
     async copyTextToClipboard(text: string) {
         navigator.clipboard.writeText(text)
     }
@@ -462,5 +473,9 @@ export default class ResponseView extends Vue {
         padding-right: 3px;
         min-width: 7em;
         max-width: 100%;
+    }
+
+    .flairModal {
+        z-index: 101
     }
 </style>

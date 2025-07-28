@@ -130,6 +130,54 @@ export default (axios: AxiosStatic) => ({
         })
     },
 
+    async getMetricResults(metric_ids: Array<number> | undefined = undefined,
+        date_range: Array<string> | undefined = undefined,
+        exclude_users: Array<string> = []
+    ) {
+        const path = '/metric/results';
+        return axios({
+            url: path,
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: {
+                metric_ids: metric_ids,
+                dates: date_range,
+                exclude_users: exclude_users
+            },
+            withCredentials: true
+        })
+    },
+    
+    async getSpecialMetric(skip: number = 0,
+        limit: number = 1000,
+        metric_type: Array<string> = [],
+        start_time: Array<string> = [],
+        end_time: Array<string> = [],
+        created: Array<string> = [],
+        modified: Array<string> = []
+    ) {
+        const path = '/special_metric/';
+        return axios({
+            url: path,
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: {
+                skip: skip,
+                limit: limit,
+                metric_type: metric_type,
+                start_time: start_time,
+                end_time: end_time,
+                created: created,
+                modified: modified, 
+            },
+            withCredentials: true
+        })
+    },
+    
     async getUserActivity() {
         const path = '/users/activity'
         return axios({

@@ -57,13 +57,15 @@ export enum PermissionEnum {
 export interface Tag {
     id: number,
     name: string,
-    description?: string
+    description?: string,
+    link_count?: number
 }
 
 export interface Source {
     id: number,
     name: string,
-    description?: string
+    description?: string,
+    link_count?: number
 }
 
 export interface IRElement extends Record<string, any> {
@@ -251,4 +253,10 @@ export interface IRElementQuickButton {
     args?: Array<any>,
     subActions?: Array<IRElementQuickButton>
     subActionSlider?: any
+}
+
+export interface TagSourceAppearance {
+    target_type: IRElementType,
+    target_id: number,
+    items: Array<Tag> | Array<Source>
 }

@@ -57,6 +57,14 @@ export const mutations: MutationTree<TeamState> = {
         state.gameResults = payload
     },
 
+    retrieveMetricResultsSuccess(state, payload: any) {
+        state.metricResults = payload
+    },
+
+    retrieveSpecialMetricSuccess(state, payload: any) {
+        state.specialMetric = payload
+    },
+    
     retrieveUserActivitySuccess(state, payload: any) {
         state.userActivity = payload
     }

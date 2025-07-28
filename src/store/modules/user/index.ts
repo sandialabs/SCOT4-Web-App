@@ -14,7 +14,9 @@ export const state: UserState = {
     userApiKeys: [],
     firehose: undefined,
     firehoseReconnectTask: undefined,
+    firehoseRequestsInProgress: [],
     showQuickSettings: false,
+    searchText: '',
     searchResults: undefined,
     showSearchOverlay: false,
     notificationsRemaining: 0

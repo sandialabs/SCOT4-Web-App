@@ -44,6 +44,14 @@ export const getters: GetterTree<TeamState, RootState> = {
         return state.gameResults
     },
 
+    metricResults(state): Array<any> {
+        return state.metricResults
+    },
+
+    specialMetric(state): Array<any> {
+        return state.specialMetric
+    },
+    
     userActivity(state): any {
         return state.userActivity
     }

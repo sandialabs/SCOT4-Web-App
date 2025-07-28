@@ -44,6 +44,10 @@ export const getters: GetterTree<UserState, RootState> = {
         return state.searchResults
     },
 
+    searchText(state): string | undefined {
+        return state.searchText
+    },
+
     currentUserPreferences(state): Record<string, any> | undefined {
         if (state.user && state.user.preferences != null) {
             return state.user.preferences

@@ -6,13 +6,13 @@
                 <v-tooltip top color="primary" v-for="pivot in entityPivots" :key="pivot.id">
                     <template v-slot:activator="{ on, attrs }">
                         <v-btn class="mr-1"
-                               color="primary"
-                               dark
-                               v-bind="attrs"
-                               :link=true
-                               :href="pivot.pivot_value"
-                               target="_blank"
-                               v-on="on">
+                            color="primary"
+                            dark
+                            v-bind="attrs"
+                            :link=true
+                            :href="pivot.pivot_value"
+                            target="_blank"
+                            v-on="on">
                             {{ pivot.title }}
                         </v-btn>
                     </template>
@@ -24,7 +24,9 @@
             <v-tab key="appearances">
                 Recent Appearances
             </v-tab>
-
+            <v-tab key="timeline">
+                Timeline
+            </v-tab>
             <v-tab v-for="enrichmentName in Object.keys(entityEnrichments)" :key="enrichmentName">
                 {{  enrichmentName }}
             </v-tab>
@@ -35,13 +37,22 @@
             <v-tab-item key="appearances" class="flex-column-noscroll">
                 <EntityAppearancesPane :entity="entity" class="flex-column-noscroll"></EntityAppearancesPane>
             </v-tab-item>
+            <v-tab-item key="timeline" class="flex-column-noscroll">
+                <TimelineView :entity="entity" class="flex-column-noscroll"></TimelineView>
+            </v-tab-item>
             <v-tab-item  v-for="enrichment in Object.keys(entityEnrichments)" :key="enrichment" class="scroll-child">
             <v-card>
+
+                <!-- Replay Button -->
+                <v-btn @click="replayEnrichment(entity.id)">
+                    Replay Enrichments
+                </v-btn>
 
                 <v-card-subtitle v-if="entity.enrichments[enrichment][entityEnrichmentIndicies[enrichment]].description">
                     {{ `Description:  ${entity.enrichments[enrichment][entityEnrichmentIndicies[enrichment]].description} `}}
                     <v-divider vertical></v-divider>
                 </v-card-subtitle>
+
                 <component v-bind:is="enrichmentClassMap[entity.enrichments[enrichment][entityEnrichmentIndicies[enrichment]].enrichment_class]" :enrichment="entity.enrichments[enrichment][entityEnrichmentIndicies[enrichment]]"></component>
             <v-card-actions v-if="entity.enrichments[enrichment].length > 1" >
                 <v-tooltip bottom v-if="entityEnrichmentIndicies[enrichment] < entity.enrichments[enrichment].length - 1">
@@ -72,8 +83,32 @@
             </v-tab-item>
             
         </v-tabs-items>
+        <!-- Success Snackbar -->
+        <v-snackbar v-model="successSnackbar" top left :timeout="3000">
+            <v-card>
+                <v-card-title>Enrichment request successful!</v-card-title>
+                <v-card-text>Please wait - data will automatically refresh when complete.</v-card-text>
+            </v-card>
+            <template v-slot:action="{ attrs }">
+                <v-btn color="red" text @click="successSnackbar = false" v-bind="attrs">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
 
-    </v-card>
+        <!-- Failure Snackbar -->
+        <v-snackbar v-model="failureSnackbar" top left :timeout="3000">
+            <v-card>
+                <v-card-title>Enrichment request failed!</v-card-title>
+                <v-card-text>{{ failureMessage }}</v-card-text>
+            </v-card>
+            <template v-slot:action="{ attrs }">
+                <v-btn color="red" text @click="failureSnackbar = false" v-bind="attrs">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
+    </v-card>    
 </template>
 
 
@@ -84,6 +119,7 @@ import { Getter, Action } from 'vuex-class';
 import { IRElement, IRElementType, IRElementMeta, Entry, NewEntry } from '@/store/modules/IRElements/types'
 import Journal from '@/components/JournalComponents/Journal.vue'
 import EntityAppearancesPane from '@/components/PaneComponents/EntityAppearancesPane.vue'
+import TimelineView from '@/components/PaneComponents/TimelineView.vue';
 import JsonTreePane from '@/components/EnrichmentPaneComponents/JsonTreePane.vue';
 import MarkdownPane from '@/components/EnrichmentPaneComponents/MarkdownPane.vue';
 import PlainTextPane from '@/components/EnrichmentPaneComponents/PlainTextPane.vue';
@@ -98,6 +134,7 @@ const namespace: string = 'IRElements';
         Journal,
         EntityAppearancesPane,
         JsonTreePane,
+        TimelineView,
         MarkdownPane,
         PlainTextPane,
         LineChartPane,
@@ -109,6 +146,7 @@ export default class FlairPane extends Vue{
     @Getter('selectedElementEntitiesArray', { namespace }) selectedElementEntitiesArray: Array<any>
     @Action('addFlairedEntity', { namespace }) addFlairedEntity: CallableFunction
     @Action('resetFlairedEnrichmentsAndPivotsValue', { namespace }) resetFlairedEnrichmentsAndPivotsValue: CallableFunction
+    @Action('enrichEntityByID', {namespace}) enrichEntityByID: CallableFunction
     @Getter('flairedEnrichmentsandPivotsLoaded', { namespace }) flairedEnrichmentsandPivotsLoaded: any
     @Getter('selectedElementFlairedEntities', { namespace }) selectedElementFlairedEntities: Array<any>;
     @Prop() entity: any
@@ -118,8 +156,15 @@ export default class FlairPane extends Vue{
     tab = null
 
     entityEnrichmentIndicies:any = {}
-
-
+    loadedPivotsAndEnrichments: boolean = false
+    entityEnrichments:any = {}
+    entityPivots:any = []
+    
+    // Snackbar control properties
+    successSnackbar: boolean = false;
+    failureSnackbar: boolean = false;
+    failureMessage: string = '';
+    successMessage: string = '';
 
     changeEnrichmentIndex(enrichmentName:string, step:number){
         if (this.entityEnrichmentIndicies[enrichmentName] == 0 && step < 0)
@@ -141,9 +186,6 @@ export default class FlairPane extends Vue{
         }
     }
 
-    loadedPivotsAndEnrichments: boolean = false
-   entityEnrichments:any = {}
-    entityPivots:any = []
     @Watch('flairedEnrichmentsandPivotsLoaded')
    async onEnrichmentsAndPivotsLoaded(newVal:any, oldVal:any){
         if(newVal == this.entity.id)
@@ -186,6 +228,25 @@ export default class FlairPane extends Vue{
                 return "amber"
             default:
                 return "white"
+        }
+    }
+
+    // Method to handle the replay button click
+    async replayEnrichment(entityId: string) {
+        try {
+            const enrichResponse = await this.enrichEntityByID({ entityID: entityId });
+            const message = enrichResponse.message;
+            if (message === "Enrichment queued") {
+                this.successMessage = message;
+                this.successSnackbar = true;
+            } else {
+                this.failureMessage = message;
+                this.failureSnackbar = true;
+            }
+        } catch (error) {
+            console.error('Error replaying enrichment:', error);
+            this.failureMessage = 'An error occurred while processing your request.';
+            this.failureSnackbar = true;
         }
     }
 
