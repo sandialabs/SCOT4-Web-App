@@ -1,1 +1,0 @@
-declare module 'remixicon/fonts/remixicon.symbol.svg'

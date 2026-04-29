@@ -1,7 +1,6 @@
 FROM node:lts-alpine as build-stage
 WORKDIR /app
-ENV VUE_APP_API_FIREHOSE=VUE_APP_API_FIREHOSE \
-    VUE_APP_API_BASE=VUE_APP_API_BASE
+ENV VITE_APP_API_BASE=VITE_APP_API_BASE
 
 COPY package.json ./package.json
 

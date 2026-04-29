@@ -1,212 +1,250 @@
-import Vue from 'vue'
-import VueRouter, { RouteConfig } from 'vue-router'
-import Login from '../views/Login.vue'
-import Response from '../views/Response.vue'
-import ComingSoon from '../views/ComingSoon.vue'
-import Landing from '../views/Landing.vue'
-import Calendar from '../views/Calendar.vue'
-import ThreatModel from '../views/ThreatModel.vue'
-import Admin from '../views/Admin.vue'
-import FullScreenEntry from '../views/FullScreenEntry.vue'
-import EntityClassIcons from '../views/EntityClassIcons.vue'
-import { IRElementType } from '@/store/modules/IRElements/types'
-import UserSettingsView from '../views/UserSettings.vue'
-import Stats from '../views/Stats.vue'
-import TagsSources from "../views/TagsSources.vue"
+import { createRouter, createWebHashHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import ElementView from '../views/ElementQueueView.vue'
+import CalendarView from '../views/CalendarView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import TagsSourcesView from '@/views/TagsSourcesView.vue'
+import { IRElementType } from '../types/irelement'
+import { useAuth_APIStore } from '@/stores'
+import { useStorage } from '@/storage/storage'
+import AdminView from '@/views/AdminView.vue'
+import StatsView from '@/views/StatsView.vue'
 
-Vue.use(VueRouter)
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes: [
+    {
+      path: '/',
+      name: 'Home',
+      component: HomeView
+    },
+    {
+      path: '/team/calendar',
+      name: 'Calendar',
+      component: CalendarView
+    },
+    {
+      path: '/alertgroups/:id?/:entryId?',
+      name: IRElementType.Alertgroup,
+      component: ElementView,
+      alias: '/alertgroup/:id?/:entryId?',
+    },
+    {
+      path: '/events/:id?/:entryId?',
+      name: IRElementType.Event,
+      component: ElementView,
+      alias: '/event/:id?/:entryId?',
+    },
+    {
+      path: '/incidents/:id?/:entryId?',
+      name: IRElementType.Incident,
+      component: ElementView,
+      alias: '/incident/:id?/:entryId?',
+    },
+    {
+      path: '/dispatches/:id?/:entryId?',
+      name: IRElementType.Dispatch,
+      component: ElementView,
+      alias: '/dispatch/:id?/:entryId?',
+    },
+    {
+      path: '/intels/:id?/:entryId?',
+      name: IRElementType.Intel,
+      component: ElementView,
+      alias: '/intel/:id?/:entryId?',
+    },
+    {
+      path: '/products/:id?/:entryId?',
+      name: IRElementType.Product,
+      component: ElementView,
+      alias: '/product/:id?/:entryId?',
+    },
+    {
+      path: '/feeds/:id?/:entryId?',
+      name: IRElementType.Feed,
+      component: ElementView,
+      alias: '/feed/:id?/:entryId?',
+    },
+    {
+      path: '/entities/:id?/:entryId?',
+      name: IRElementType.Entity,
+      component: ElementView,
+      alias: '/entity/:id?/:entryId?',
+    },
+    {
+      path: '/tasks/:id?/:target_type?/:target_id?',
+      name: IRElementType.Entry,
+      component: ElementView,
+      alias: '/task/:id?/:target_type?/:target_id?',
+    },
+    {
+      path: '/signatures/:id?/:entryId?',
+      name: IRElementType.Signature,
+      component: ElementView,
+      alias: '/signature/:id?/:entryId?',
+    },
+    {
+      path: '/guides/:id?/:entryId?',
+      name: IRElementType.Guide,
+      component: ElementView,
+      alias: '/guide/:id?/:entryId?',
+    },
+    {
+      path: '/pivots/:id?/:entryId?',
+      name: IRElementType.Pivot,
+      component: ElementView,
+      alias: '/pivot/:id?/:entryId?',
+    },
+    {
+      path: '/entity-classes/:id?/:entryId?',
+      name: IRElementType.EntityClass,
+      component: ElementView,
+    },
+    {
+      path: '/vuln_feeds/:id?/:entryId?',
+      name: IRElementType.VulnFeed,
+      component: ElementView,
+      alias: '/vuln_feed/:id?/:entryId?',
+    },
+    {
+      path: '/vuln_tracks/:id?/:entryId?',
+      name: IRElementType.VulnTrack,
+      component: ElementView,
+      alias: '/vuln_track/:id?/:entryId?',
+    },
+    {
+      path: '/tags/:id?',
+      name: 'tags',
+      component: TagsSourcesView,
+    },
+    {
+      path: '/sources/:id?',
+      name: 'sources',
+      component: TagsSourcesView,
+    },
+    {
+      path: '/stats/:id?',
+      name: 'stats',
+      component: StatsView,
+    },
+    {
+      path: '/threat_model_items/:id?/:entryId?',
+      name: IRElementType.ThreatModelItem,
+      component: ElementView,
+      alias: '/threat_model_item/:id?/:entryId?',
+    },
+    {
+      path: "/admin",
+      name: "Admin",
+      component: AdminView,
+      children: [
+        {
+          path: "global-settings",
+          name: "global-settings",
+          component: AdminView
+        },
+        {
+          path: "users-groups",
+          name: "users-groups",
+          component: AdminView
+        },
+        {
+          path: "authentication",
+          name: "authentication",
+          component: AdminView
+        },
+        {
+          path: "audit-logs",
+          name: "audit-logs",
+          component: AdminView
+        },
+        {
+          path: "storage",
+          name: "storage",
+          component: AdminView
+        },
+        {
+          path: "permissions",
+          name: "permissions",
+          component: AdminView
+        }
+      ]
+    },
+    {
+      path: '/profile',
+      name: "UserProfile",
+      component: ProfileView,
+      children: [
+        {
+          path: 'user-profile',
+          name: 'one',
+          component: ProfileView,
+        },
+        {
+          path: 'user-preferences',
+          name: 'two',
+          component: ProfileView,
+        },
+        {
+          path: 'api-keys',
+          name: 'three',
+          component: ProfileView,
+        },
+        {
+          path: 'user-logs',
+          name: 'four',
+          component: ProfileView,
+        },
+        {
+          path: 'user-permissions',
+          name: 'five',
+          component: ProfileView,
+        }
+      ],
 
-const routes: Array<RouteConfig> = [
-    {
-        path: '/login',
-        name: 'Login',
-        component: Login
     },
-    {
-        path: '/team/calendar',
-        name: 'Calendar',
-        component: Calendar
-    },
-    {
-        path: '/threat_model/:type?',
-        name: 'ThreatModel',
-        component: ThreatModel
-    },
-    {
-        path: '/admin',
-        name: 'Admin',
-        component: Admin
-    },
-    {
-        path: '/',
-        name: 'Landing',
-        component: Landing
-    },
-    {
-        path: '/entities/:id?/:entryId?',
-        name: 'Entities',
-        component: Response,
-        meta: { itemType: IRElementType.Entity },
-        alias: '/entity/:id?/:entryId?'
-    },
-    {
-        path: '/entity_classes_list',
-        name: 'EntityClasses',
-        component: EntityClassIcons
-    },
-    {
-        path: '/alertgroups/:id?/:entryId?',
-        name: 'Alertgroups',
-        component: Response,
-        meta: { itemType: IRElementType.Alertgroup },
-        alias: '/alertgroup/:id?/:entryId?'
-    },
-    {
-        path: '/events/:id?/:entryId?',
-        name: 'Events',
-        component: Response,
-        meta: { itemType: IRElementType.Event },
-        alias: '/event/:id?/:entryId?'
-    },
-    {
-        path: '/vuln_feeds/:id?/:entryId?',
-        name: 'Queue',
-        component: Response,
-        meta: { itemType: IRElementType.VulnFeed },
-        alias: '/vuln_feed/:id?/:entryId?'
-    },
-    {
-        path: '/vuln_tracks/:id?/:entryId?',
-        name: 'Tracking',
-        component: Response,
-        meta: { itemType: IRElementType.VulnTrack },
-        alias: '/vuln_track/:id?/:entryId?'
-    },
-    {
-        path: '/signatures/:id?/:entryId?',
-        name: 'Signatures',
-        component: Response,
-        meta: { itemType: IRElementType.Signature },
-        alias: '/signature/:id?/:entryId?'
-    },
-    {
-        path: '/incidents/:id?/:entryId?',
-        name: 'Incidents',
-        component: Response,
-        meta: { itemType: IRElementType.Incident },
-        alias: '/incident/:id?/:entryId?'
-    },
-    {
-        path: '/intels/:id?/:entryId?',
-        name: 'Intels',
-        component: Response,
-        meta: { itemType: IRElementType.Intel },
-        alias: '/intel/:id?/:entryId?'
-    },
-    {
-        path: '/dispatches/:id?/:entryId?',
-        name: 'Dispatches',
-        component: Response,
-        meta: { itemType: IRElementType.Dispatch },
-        alias: '/dispatch/:id?/:entryId?'
-    },
-    {
-        path: '/products/:id?/:entryId?',
-        name: 'Products',
-        component: Response,
-        meta: { itemType: IRElementType.Product },
-        alias: '/product/:id?/:entryId?'
-    },
-    {
-        path: '/feeds/:id?/:entryId?',
-        name: 'Feed',
-        component: Response,
-        meta: { itemType: IRElementType.Feed },
-        alias: '/feed/:id?/:entryId?'
-    },
-    {
-        path: '/tasks/:id?/:target_type?/:target_id?',
-        name: 'Task',
-        component: Response,
-        meta: { itemType: IRElementType.Entry, extraFilters: { "entry_class": "task" } },
-        alias: '/task/:id?/:target_type?/:target_id?'
-    },
-    {
-        path: '/guides/:id?/:entryId?',
-        name: 'Guide',
-        component: Response,
-        meta: { itemType: IRElementType.Guide },
-        alias: '/guide/:id?/:entryId?'
-    },
-    {
-        path: '/pivots/:id?',
-        name: 'Pivot',
-        component: Response,
-        meta: { itemType: IRElementType.Pivot },
-        alias: '/pivot/:id?'
-    },
-    {
-        path: '/entity_classes/:id?',
-        name: 'EntityClass',
-        component: Response,
-        meta: { itemType: IRElementType.EntityClass }
-    },
-    {
-        path: '/tags/:id?',
-        name: 'Tags',
-        component: TagsSources,
-        meta: { itemType: "tag" }
-    },
-    {
-        path: '/sources/:id?',
-        name: 'Sources',
-        component: TagsSources,
-        meta: { itemType: "source" }
-    },
-    {
-        path: '/hunts/:id?/:entryId?',
-        name: 'Hunts',
-        component: ComingSoon
-    },
-    {
-        path: '/actors/:id?/:entryId?',
-        name: 'Actors',
-        component: ComingSoon
-    },
-    {
-        path: '/profile',
-        name: 'UserSettings',
-        component: UserSettingsView,
-    },
-    {
-        path: '/coming_soon',
-        name: 'Coming Soon',
-        component: ComingSoon,
-    },
-    {
-        path: '/:elementType/:elementId/entry/:entryId/fullScreen',
-        name: 'FullScreenEntry',
-        component: FullScreenEntry
-    },
-    {
-        path: '/stats',
-        name: 'StatsCentral',
-        component: Stats
-    },
-]
-
-const router = new VueRouter({
-  routes
+  ]
 })
 
-
-
-router.afterEach((to, from) => {
-  const toDepth = to.path.split('/').length
-  const fromDepth = from.path.split('/').length
-  if(to !=undefined && to.meta!=undefined && (to.name=='FullScreenEntry' || from.name=='FullScreenEntry')){
-    to.meta.transitionName = 'fade'
+router.beforeResolve(async (to, _from, next) => {
+  const Auth = useAuth_APIStore()
+  const Storage = useStorage()
+  // console.log('tokenvalid', Auth.isAuthTokenExpired)
+  try {
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
+    const state = urlParams.get('state')
+    if (to.name == 'Landing' && code && state) {
+      // await store.dispatch('user/completeAzureAD', { code, state })
+      // if (store.getters['user/isLoggedIn']) {
+      //     const redirectUrl = await Vue.prototype.$storage.getItem('loginRedirect')
+      //     const currentUrlNoParams = new URL(location.pathname + location.hash, window.location.origin)
+      //     if (redirectUrl) {
+      //         Vue.prototype.$storage.removeItem('loginRedirect')
+      //         let fullRedirectHref = currentUrlNoParams.href + redirectUrl
+      //         if (currentUrlNoParams.href.endsWith('/')) {
+      //             fullRedirectHref = currentUrlNoParams.href + redirectUrl.substring(1)
+      //         }
+      //         window.location.replace(fullRedirectHref)
+      //     }
+      //     else {
+      //         window.location.replace(currentUrlNoParams)
+      //     }
+      // }
+    }
+    //else if (to.name !== 'Login' && Auth.isAuthTokenExpired) {
+    //  Storage.setItem('loginRedirect', to.path)
+    //  next({ name: 'Login' })
+    //}
+    // else if (to.name == 'Admin' && store.getters['user/currentUser'].is_superuser != true) {
+    //     next({ name: 'Landing' })
+    // }
+    else {
+      next()
+    }
+  }
+  catch (e) {
+    console.log(e)
   }
 })
-
 export default router

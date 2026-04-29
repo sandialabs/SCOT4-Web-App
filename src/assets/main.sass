@@ -1,0 +1,340 @@
+main
+    height: 90vh
+.scot-logo
+    width: 50px !important
+    height: 50px !important
+    &-background
+        opacity: 20%
+        position: absolute
+        // z-index: -1000000000
+        bottom: -0px
+        right: 0px
+        height: 85vh
+    &-background-logo
+        height: 25vh
+.loading-application-wrapper
+    position: fixed
+    left: 41%
+    top: 20%
+    display: block
+.placeholder-small
+    height: 50px
+.small-modal
+    max-width: 500px
+.large-modal
+    min-height: 85% !important
+.placeholder-large
+    height: 100px
+.splitpanes--vertical
+    div.pane-content-wrapper
+        min-height: 100%
+        display: flex
+        flex-direction: column
+        .scroll-child
+            height: 30%
+            overflow-y: auto
+.fullSizeBottomSheet
+    height: 95vh
+.halfSizeBottomSheet
+    height: 70vh
+.bottom-sheet-wrapper
+    padding: 20px
+.bottom-sheet-title-wrapper
+    display: flex
+    justify-content: space-between
+.bottom-sheet-top-wrapper
+    right: 5px
+    width: 100%
+    display: flex
+    justify-content: space-between
+    & > div > button
+        margin: 5px
+.botton-sheet-title-wrapper
+    display: flex
+    justify-content: space-between
+.botton-sheet-top-wrapper
+    right: 5px
+    width: 100%
+    display: flex
+    justify-content: space-between
+    & > div > button
+        margin: 5px
+.irelement-row
+    cursor: pointer !important
+    border-left: 2px solid transparent
+    &:hover
+        transition: 1s
+        border-color: purple
+        background-color: #eeeeee
+.flex-table
+    display: flex
+    flex-grow: 1
+    width: 100%
+.v-data-table-header__content
+    text-align: center !important
+// .splitpanes
+//     min-height: 39vh
+.scroll-pane
+    .pane-container
+        height: 60vh
+        overflow: scroll
+.panes-tab
+    span.v-btn__content
+        display: flex !important
+        justify-content: space-between !important
+.activeTab
+    background-color: #dedede !important
+.activeTabAlerts
+    border-left: 2px solid
+    border-bottom: 2px solid
+    border-color: purple
+.pane-exit-button
+    position: absolute !important
+    right: 7px !important
+.pane-tab
+    border-left: 1px solid black !important
+    border-right: 1px solid black !important
+    border-bottom: 1px solid black !important
+    border-top: 1px solid black !important
+    &:hover
+        background-color: #BDBDBD
+fieldset
+    border: 1px solid black !important
+    border-radius: 10px !important
+    height: 100%
+    padding: 3px !important
+    font-size: 0.9rem !important
+    legend
+        font-size: 0.9rem
+        margin-bottom: 0px !important
+.v-chip-group
+    padding: 0px !important
+    padding-left: 5px !important
+.header-sub-chosen
+    font-size: 0.7rem
+    position: absolute
+    bottom: -18%
+    left: 20%
+    text-transform: capitalize
+    border-bottom: 1px solid purple
+.dropdown-item
+    text-transform: capitalize
+.tabs-window-width
+    width: 100%
+.v-row
+    flex-wrap: nowrap !important
+.theme-green-color
+    color: green !important
+.uppercase-text
+    text-transform: uppercase
+.system-bar-entry
+    font-size: 1rem !important
+    position: relative !important
+    display: inline-flex !important
+    justify-content: space-between !important
+    top: 0px !important
+    margin-bottom: 2px
+    .system-bar-entry-left, .system-bar-entry-right
+        button
+            font-size: 1.1rem
+            min-width: 5px !important
+            padding: 4px !important
+            height: 100% !important
+.el-tiptap-editor__menu-bar
+    display: flex !important
+    justify-content: space-around
+.tiptap
+    &.ProseMirror
+        padding: 5px
+.footer-prepend-buttons
+    display: flex
+    left: 20px
+    position: absolute
+.text-clip
+    text-overflow: ellipsis ellipsis
+    overflow: hidden
+    white-space: nowrap
+    max-width: 30em
+    display: block
+table, .table-filter-row
+    font-size: 0.8rem !important
+    .v-chip__content
+        font-size: 0.8rem !important
+.v-table
+    .v-divider
+        margin: 0px !important
+    .filler-td
+        background-color: rgb(226,228,231) !important
+.voting-button
+    font-size: 1.2rem !important
+.v-list-item
+    cursor: pointer
+td
+    overflow-wrap: break-word !important
+.tdEnd
+    text-align: end !important
+    width: 200px !important
+.twoHundredWidth
+    width: 200px !important
+    text-align: center !important
+    text-transform: capitalize !important
+.alert-cell
+    width: 180px !important
+    height: 100px !important
+    max-width: 180px !important
+    max-height: 100px !important
+    font-size: 0.9rem !important
+    overflow: auto !important
+    min-height: 22px !important
+    overflow-wrap: break-word !important
+    padding: 0px 8px !important
+    font-size: 0.8rem !important
+    .v-container
+        padding: 2px
+        width: 180px
+        vertical-align: middle
+.alert-container
+    max-height: 200px
+    display: inline-block
+    overflow: auto
+    width: 100%
+    padding: 2px
+.flair-chip
+    color: black !important
+    background-color: #F4FF81 !important
+    word-break: break-word !important
+    padding: 3px
+    border-radius: 50px
+    margin-right: 13px
+    cursor: pointer
+    &:hover
+        transition: 1s
+        background-color: darken(#F4FF81, 30%) !important
+.draggableModal
+    z-index: 1000
+    width: 1000px
+    height: 800px
+    background-color: #ECEFF1 !important
+    table, tr, td, th, .v-data-table-footer, .v-table__wrapper
+        background-color: #ECEFF1 !important
+.journal-modal
+    background-color: #ECEFF1 !important
+    height: 100%
+.grab-cursor
+    cursor: grab !important
+    &:active
+        cursor: grabbing !important
+.markdown-div
+    background-color: #ECEFF1 !important
+    margin: 2px
+    padding: 2px
+    padding-left: 10px !important
+    padding-right: 10px !important
+    table
+        width: 100%
+        td
+            font-size: 0.9rem !important
+figure
+    &.table
+        background-color: none !important
+.editor-entry, .cell-view
+    min-height: 165px !important
+    background-color: none !important
+    table
+        display: table
+        border-collapse: collapse
+        border-spacing: 0
+        border: 1px double #b3b3b3
+        background-color: none !important
+        tbody
+            display: table-row-group
+            vertical-align: middle
+            unicode-bidi: isolate
+            border-color: inherit
+            tr
+                display: table-row
+                vertical-align: inherit
+                unicode-bidi: isolate
+                border-color: inherit
+            th
+                font-weight: 700
+                background: rgba(0, 0, 0, .05)
+                min-width: 2em
+                border: 1px solid #bfbfbf
+                padding: .2em
+            td
+                min-width: 2em
+                border: 1px solid #bfbfbf
+                padding: .2em
+.tiptap
+    &.ProseMirror
+        min-height: 164px
+.ProseMirror-focused
+    &:focus-visible
+        outline: green auto 1px !important
+.editor-toolbar
+.journal-border
+    border: 3px solid
+////////TRANSISTIONS
+.login-enter-active
+    transition: opacity 1s
+.login-leave-active
+    transition: opacity 1s
+.login-enter-from
+    opacity: 0
+.login-leave-to
+    opacity: 0
+.journal-text
+    font-size: 0.8rem
+.v-calendar-month__days > .v-calendar-month__day
+    min-height: 120px !important
+.v-calendar-weekly__head
+    border-bottom: 1px solid lightgrey !important
+.isreply
+    margin-left: 10px
+$scot-theme-light-bg: #A5D6A7
+$scot-theme-dark-bg: #2E7D32
+.notification-text
+    max-height: 150px
+    overflow-y: auto
+.notification-alert-toasts
+    position: fixed
+    right: 20px
+    top: 65px
+    max-width: 300px
+    min-width: 300px
+    word-break: break-word
+.active-user-group
+    background-color: rgba(0, 0, 0, .1)
+///// ######## Light MODE #######//////
+.scot-theme-light
+    header
+        &.v-app-bar
+            background-color: $scot-theme-light-bg
+            color: black
+            .dropdown-item.active, .dropdown-item:active
+                background-color: $scot-theme-light-bg !important
+    footer
+        background-color: $scot-theme-light-bg
+        color: black
+    .splitpanes.default-theme
+        .splitpanes__pane
+            background-color: white
+        .splitpanes__splitter
+            background-color: #BDBDBD !important
+            &::before
+                background-color: black !important
+            &::after
+                background-color: black !important
+///// ######## Light MODE #######//////
+
+///// ######## Dark MODE #######//////
+.scot-theme-dark
+    header
+        &.v-app-bar
+            background-color: $scot-theme-dark-bg
+            color: white !important
+    footer
+        background-color: $scot-theme-dark-bg
+        color: white
+    ///// ######## Dark MODE #######//////

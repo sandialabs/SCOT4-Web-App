@@ -1,4 +1,4 @@
-const default_title: string = "SCOT 4.0"
+const default_title: string = "SCOT 4.6"
 const default_incident_summary: string = "<table><tbody><tr><th>Description</th><td><i>Place description of the incident here</i></td></tr>\
 <tr><th>Related Indicators</th><td><i>Place IOCs here</i></td></tr>\
 <tr><th>Source Details</th><td><i>Place wource port, ip, protocol, etc. here</i></td></tr>\
